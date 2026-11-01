@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<title>Viltobservasjoner Linge</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: kartet fyller hele skjermen; flytende kontroller i hjørnene;
+   skjema og liste som bunnark på mobil og sidepanel på større skjermer. */
+:root{
+  --brand:#1E3B2F;       /* granskog */
+  --brand-ink:#F2F5EF;
+  --accent:#E4572E;      /* signalorange */
+  --accent-ink:#FFFFFF;
+  --bg:#EEF1EB;
+  --panel:#FBFCF9;
+  --fg:#17211B;
+  --muted:#5B685F;
+  --line:#D3DACF;
+  --field:#FFFFFF;
+  --ok:#2E7A4C;
+  --err:#B42318;
+  --shadow:0 6px 22px rgba(12,22,16,.22);
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#101612; --panel:#18211B; --fg:#E5EBE4; --muted:#9AA89E; --line:#2D3A31;
+    --field:#111813; --ok:#6CC08F; --err:#FF8A7A; --brand:#24473A;
+    --shadow:0 6px 22px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{font-family:var(--body);font-size:15px;color:var(--fg);background:var(--bg);-webkit-text-size-adjust:100%}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+#map{position:fixed;inset:0;background:var(--bg)}
+.placing #map{cursor:crosshair}
+.placing .leaflet-interactive{cursor:crosshair}
+
+/* Toppfelt */
+.topbar{position:fixed;z-index:1000;top:calc(10px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));display:flex;gap:8px;align-items:stretch;max-width:calc(100% - 80px)}
+.brand{background:var(--brand);color:var(--brand-ink);border-radius:8px;padding:7px 12px 6px;box-shadow:var(--shadow);min-width:0}
+.brand b{display:block;font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:.07em;text-transform:uppercase;line-height:1.05;white-space:nowrap}
+.brand span{display:block;font-size:12px;opacity:.82;white-space:nowrap}
+.chip{border:0;border-radius:8px;background:var(--panel);color:var(--fg);box-shadow:var(--shadow);padding:0 12px;font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.03em;cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip .n{font-variant-numeric:tabular-nums;background:var(--accent);color:var(--accent-ink);border-radius:999px;padding:1px 7px;font-size:13px;min-width:22px;text-align:center}
+
+/* Ny-knapp */
+.fab{position:fixed;z-index:1000;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));border:0;border-radius:999px;background:var(--accent);color:var(--accent-ink);padding:14px 20px 13px;font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.03em;box-shadow:0 8px 22px rgba(160,50,20,.38);cursor:pointer;display:flex;gap:8px;align-items:center}
+.fab svg{width:18px;height:18px}
+
+/* Plasseringsbanner */
+.banner{position:fixed;z-index:1001;left:50%;transform:translateX(-50%);top:calc(70px + env(safe-area-inset-top,0px));background:var(--brand);color:var(--brand-ink);border-radius:10px;box-shadow:var(--shadow);padding:10px 10px 10px 14px;display:flex;gap:12px;align-items:center;width:max-content;max-width:calc(100% - 32px)}
+.banner p{margin:0;font-weight:500}
+.banner button{border:1px solid rgba(255,255,255,.45);background:transparent;color:inherit;border-radius:7px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+
+/* Paneler */
+.panel{position:fixed;z-index:1100;left:0;right:0;bottom:0;max-height:82%;overflow:auto;background:var(--panel);color:var(--fg);border-radius:16px 16px 0 0;box-shadow:0 -10px 34px rgba(0,0,0,.28);
+  padding-block:14px calc(16px + env(safe-area-inset-bottom,0px));
+  padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
+  -webkit-overflow-scrolling:touch}
+@media (min-width:780px){
+  .panel{top:calc(12px + env(safe-area-inset-top,0px));bottom:12px;right:12px;left:auto;width:390px;max-height:none;border-radius:14px;box-shadow:var(--shadow);padding-block:16px}
+  .panel.left{right:auto;left:12px;top:calc(72px + env(safe-area-inset-top,0px))}
+}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.panel h2{margin:0;font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:.02em;text-wrap:balance}
+.x{border:0;background:transparent;color:var(--muted);font-size:15px;cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:3px}
+
+/* Skjema */
+form{display:grid;gap:12px}
+.row{display:grid;grid-template-columns:1fr 92px;gap:10px}
+.row.half{grid-template-columns:1fr 1fr}
+.f{display:grid;gap:5px;min-width:0}
+.f label{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;gap:6px;align-items:center}
+.auto{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:11px;font-weight:600;color:var(--ok);border:1px solid currentColor;border-radius:999px;padding:0 6px;line-height:16px}
+input,select{width:100%;min-width:0;border:1px solid var(--line);background:var(--field);border-radius:8px;padding:10px 10px;font-size:16px;appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 55%,calc(100% - 12px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:28px}
+input[type=number]{font-variant-numeric:tabular-nums}
+.pos{font-family:var(--mono);font-size:12.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px}
+.wx{border:1px dashed var(--line);border-radius:10px;padding:9px 11px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;font-size:13.5px;line-height:1.35}
+.wx p{margin:0;min-width:0}
+.wx[data-state=loading] p{color:var(--muted)}
+.wx[data-state=ok] p{color:var(--fg)}
+.wx[data-state=error] p{color:var(--err)}
+.wx button{flex:none;border:0;background:transparent;color:var(--accent);font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+.actions{display:flex;gap:10px;margin-top:4px}
+.primary{flex:1;border:0;border-radius:9px;background:var(--accent);color:var(--accent-ink);padding:13px 16px;font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.03em;cursor:pointer}
+.primary:disabled{opacity:.6;cursor:progress}
+.secondary{border:1px solid var(--line);border-radius:9px;background:transparent;padding:12px 16px;cursor:pointer;font-weight:500}
+.err-msg{color:var(--err);font-size:14px;margin:0}
+.hint{color:var(--muted);font-size:13px;margin:0}
+
+/* Liste */
+.list{list-style:none;margin:0;padding:0;display:grid}
+.list li{border-top:1px solid var(--line)}
+.list button{width:100%;text-align:left;border:0;background:transparent;padding:10px 2px;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:baseline}
+.list .art{font-family:var(--display);font-weight:600;font-size:18px;grid-row:span 2;align-self:center;min-width:76px}
+.list .t{font-variant-numeric:tabular-nums;font-size:14px}
+.list .m{color:var(--muted);font-size:13px}
+.empty{color:var(--muted);line-height:1.5;margin:6px 0 0;max-width:34ch}
+
+/* Kartmarkører */
+.pinicon{background:none;border:0}
+.pinwrap{position:relative;width:30px;height:30px}
+.pin{position:absolute;inset:0;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--accent);border:2px solid #fff;box-shadow:0 2px 7px rgba(0,0,0,.5)}
+.pinwrap b{position:absolute;inset:0;display:grid;place-items:center;color:#fff;font:700 13px/1 var(--display);letter-spacing:.02em}
+.pinwrap i{position:absolute;top:-7px;right:-9px;font:600 11px/1 var(--body);font-style:normal;background:var(--brand);color:#fff;border:1.5px solid #fff;border-radius:999px;padding:2px 5px;font-variant-numeric:tabular-nums}
+.pinwrap.draft .pin{background:var(--brand);border-style:dashed}
+
+/* Popup */
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--panel);color:var(--fg);box-shadow:var(--shadow)}
+.leaflet-popup-content{margin:12px 14px;font-family:var(--body);font-size:14px;line-height:1.4;min-width:220px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--muted)}
+.pp h3{margin:0 0 2px;font-family:var(--display);font-weight:700;font-size:21px}
+.pp .when{color:var(--muted);font-variant-numeric:tabular-nums;margin:0 0 8px}
+.pp dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0 0 8px}
+.pp dt{color:var(--muted);font-size:13px}
+.pp dd{margin:0}
+.pp .src{color:var(--muted);font-size:12.5px;margin:0 0 8px}
+.pp .coords{font-family:var(--mono);font-size:12px;line-height:1.5;margin:0 0 10px;user-select:all;-webkit-user-select:all}
+.pp .btns{display:flex;flex-wrap:wrap;gap:6px}
+.pp .btns a,.pp .btns button{border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--fg);padding:6px 9px;font-size:13px;cursor:pointer;text-decoration:none;font-weight:500}
+.pp .btns a{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.pp .btns .danger{color:var(--err)}
+.pp .btns .danger.armed{background:var(--err);color:#fff;border-color:var(--err)}
+
+/* Kartkontroller */
+.leaflet-control-layers,.leaflet-bar a{background:var(--panel);color:var(--fg)}
+.leaflet-control-layers{border-radius:8px!important;box-shadow:var(--shadow)!important;border:0!important;font-family:var(--body);font-size:14px}
+.leaflet-control-layers-expanded{padding:8px 12px}
+.leaflet-control-layers label{padding:3px 0}
+.leaflet-bar{border:0!important;box-shadow:var(--shadow)!important}
+.leaflet-bar a{border-bottom-color:var(--line)!important}
+.leaflet-top{top:env(safe-area-inset-top,0px)}
+.leaflet-right{right:env(safe-area-inset-right,0px)}
+.leaflet-bottom{bottom:env(safe-area-inset-bottom,0px)}
+.leaflet-left{left:env(safe-area-inset-left,0px)}
+.leaflet-control-scale-line{background:rgba(255,255,255,.8);color:#17211B}
+.topo-overlay{mix-blend-mode:multiply}
+
+/* Melding */
+.toast{position:fixed;z-index:1200;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--panel);border-radius:9px;padding:10px 14px;box-shadow:var(--shadow);max-width:calc(100% - 32px);font-size:14px}
+.toast.err{background:var(--err);color:#fff}
+@media (prefers-reduced-motion: no-preference){
+  .panel{animation:up .18s ease-out}
+  @keyframes up{from{transform:translateY(16px);opacity:.4}to{transform:none;opacity:1}}
+}
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="Kart over Linge"></div>
+
+<div class="topbar">
+  <div class="brand"><b>Linge viltobs</b><span>Valldal · Fjord kommune</span></div>
+  <button class="chip" id="btn-list" type="button" aria-label="Vis liste over observasjoner">Liste <span class="n" id="count">0</span></button>
+</div>
+
+<button class="fab" id="fab" type="button">
+  <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v14M3 10h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/></svg>
+  Ny observasjon
+</button>
+
+<div class="banner" id="banner" hidden>
+  <p>Trykk i kartet der dyret ble sett</p>
+  <button type="button" id="place-cancel">Avbryt</button>
+</div>
+
+<!-- Skjema -->
+<section class="panel" id="sheet" hidden aria-labelledby="sheet-title">
+  <div class="panel-head">
+    <h2 id="sheet-title">Ny observasjon</h2>
+    <button class="x" type="button" id="f-close">Avbryt</button>
+  </div>
+  <form id="obs-form" novalidate>
+    <div class="row">
+      <div class="f">
+        <label for="f-art">Art</label>
+        <input id="f-art" list="arter" autocomplete="off" placeholder="F.eks. elg" required maxlength="60">
+        <datalist id="arter"></datalist>
+      </div>
+      <div class="f">
+        <label for="f-antall">Antall</label>
+        <input id="f-antall" type="number" inputmode="numeric" min="1" max="999" step="1" value="1" required>
+      </div>
+    </div>
+    <div class="f">
+      <label for="f-tid">Dato og klokkeslett</label>
+      <input id="f-tid" type="datetime-local" required>
+    </div>
+    <div class="wx" id="wx" data-state="loading">
+      <p id="wx-text">Henter værdata …</p>
+      <button type="button" id="wx-refresh">Hent på nytt</button>
+    </div>
+    <div class="row half">
+      <div class="f">
+        <label for="f-vaer">Vær <span class="auto" id="auto-vaer" hidden>fra MET</span></label>
+        <select id="f-vaer"></select>
+      </div>
+      <div class="f">
+        <label for="f-vind">Vind fra <span class="auto" id="auto-vind" hidden>fra MET</span></label>
+        <select id="f-vind"></select>
+      </div>
+    </div>
+    <div class="f">
+      <label for="f-sno">Snøforhold</label>
+      <select id="f-sno"></select>
+    </div>
+    <div class="pos" id="f-pos"></div>
+    <p class="hint">Dra markøren i kartet for å justere posisjonen.</p>
+    <p class="err-msg" id="f-err" hidden></p>
+    <div class="actions">
+      <button class="primary" type="submit" id="f-save">Lagre observasjon</button>
+    </div>
+  </form>
+</section>
+
+<!-- Liste -->
+<section class="panel left" id="listpanel" hidden aria-labelledby="list-title">
+  <div class="panel-head">
+    <h2 id="list-title">Observasjoner</h2>
+    <div style="display:flex;gap:14px">
+      <button class="x" type="button" id="list-fit">Vis alle</button>
+      <button class="x" type="button" id="list-close">Lukk</button>
+    </div>
+  </div>
+  <ul class="list" id="list"></ul>
+  <p class="empty" id="list-empty" hidden>Ingen observasjoner ennå. Trykk «Ny observasjon» og deretter i kartet for å legge inn den første.</p>
+</section>
+
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ---------- Oppsett ---------- */
+  const START = { lat: 62.2905, lon: 7.2130, zoom: 13 }; // Linge, Valldal
+  const ARTER = ['Elg', 'Hjort', 'Rådyr', 'Villrein', 'Bjørn', 'Ulv', 'Gaupe', 'Jerv', 'Rødrev',
+    'Hare', 'Grevling', 'Mår', 'Storfugl', 'Orrfugl', 'Lirype', 'Fjellrype', 'Kongeørn', 'Havørn'];
+  const VAER = ['Sol / klart', 'Skyet', 'Regn', 'Snøvær', 'Tåke'];
+  const VIND = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV', 'Stille'];
+  const SNO = ['Ingen', 'Flekkvis', 'Dekket', 'Nysnø', 'Sporsnø'];
+  const POLL_MS = 60000;
+
+  const $ = s => document.querySelector(s);
+  const state = {
+    obs: [], mode: 'view', draft: null, draftMarker: null, hiddenId: null,
+    touched: { vaer: false, vind: false }, wxSeq: 0, popupOpen: false, loaded: false
+  };
+
+  /* ---------- Hjelpere ---------- */
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignorer */ } }
+  };
+
+  function call(fn) {
+    const args = Array.prototype.slice.call(arguments, 1);
+    return new Promise((resolve, reject) => {
+      if (!(window.google && google.script && google.script.run)) {
+        reject(new Error('Siden må åpnes via webapp-lenken fra Apps Script.'));
+        return;
+      }
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn].apply(null, args);
+    });
+  }
+  const msg = e => (e && e.message) ? e.message : String(e);
+
+  function el(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    if (attrs) for (const k in attrs) {
+      if (k === 'class') n.className = attrs[k];
+      else if (k === 'text') n.textContent = attrs[k];
+      else if (k.startsWith('on')) n.addEventListener(k.slice(2), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
+    }
+    kids.forEach(c => { if (c != null) n.append(c.nodeType ? c : document.createTextNode(String(c))); });
+    return n;
+  }
+
+  let toastTimer = null;
+  function toast(text, isErr) {
+    const t = $('#toast');
+    t.textContent = text;
+    t.classList.toggle('err', !!isErr);
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, isErr ? 6000 : 3200);
+  }
+
+  const pad = n => String(n).padStart(2, '0');
+  function nowLocal() {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+  function fmtTid(s) {
+    const d = new Date(s);
+    if (isNaN(d)) return s || '';
+    const opt = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+    if (d.getFullYear() !== new Date().getFullYear()) opt.year = 'numeric';
+    return d.toLocaleString('nb-NO', opt);
+  }
+  const deg = (x, d) => x.toFixed(d).replace('.', ',');
+  const grp = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+  // WGS84/ETRS89 -> UTM sone 33 (EUREF89 UTM33, EPSG:25833). Krüger-serie (Karney).
+  function toUTM33(lat, lon) {
+    const a = 6378137, f = 1 / 298.257222101, k0 = 0.9996, lon0 = 15 * Math.PI / 180;
+    const n = f / (2 - f), n2 = n * n, n3 = n2 * n;
+    const A = a / (1 + n) * (1 + n2 / 4 + n2 * n2 / 64);
+    const al = [0, n / 2 - 2 * n2 / 3 + 5 * n3 / 16, 13 * n2 / 48 - 3 * n3 / 5, 61 * n3 / 240];
+    const phi = lat * Math.PI / 180, lam = lon * Math.PI / 180 - lon0;
+    const e = 2 * Math.sqrt(n) / (1 + n);
+    const t = Math.sinh(Math.atanh(Math.sin(phi)) - e * Math.atanh(e * Math.sin(phi)));
+    const xi = Math.atan2(t, Math.cos(lam));
+    const eta = Math.atanh(Math.sin(lam) / Math.sqrt(1 + t * t));
+    let E = eta, N = xi;
+    for (let j = 1; j <= 3; j++) {
+      E += al[j] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
+      N += al[j] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
+    }
+    return { e: 500000 + k0 * A * E, n: k0 * A * N };
+  }
+
+  function nibUrl(o) {
+    const u = toUTM33(o.lat, o.lon);
+    return `https://norgeibilder.no/?x=${Math.round(u.e)}&y=${Math.round(u.n)}&level=17&utm=33`;
+  }
+  function coordText(o) {
+    const u = toUTM33(o.lat, o.lon);
+    return `N ${grp(u.n)}  Ø ${grp(u.e)} (UTM 33)\n${deg(o.lat, 5)}° N  ${deg(o.lon, 5)}° Ø`;
+  }
+
+  /* ---------- Kart ---------- */
+  const map = L.map('map', { zoomControl: false, center: [START.lat, START.lon], zoom: START.zoom, maxZoom: 20 });
+  L.control.zoom({ position: 'bottomleft', zoomInTitle: 'Zoom inn', zoomOutTitle: 'Zoom ut' }).addTo(map);
+  L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+  map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
+
+  const KV_ATTR = '© <a href="https://www.kartverket.no/" target="_blank" rel="noopener">Kartverket</a>';
+  function kvLayer(layer, extra) {
+    const rest = `https://cache.kartverket.no/v1/wmts/1.0.0/${layer}/default/webmercator/{z}/{y}/{x}.png`;
+    const tl = L.tileLayer(rest, Object.assign({ maxNativeZoom: 18, maxZoom: 20, attribution: KV_ATTR }, extra));
+    // Reserveadresse (KVP) hvis REST-adressen svikter
+    tl.on('tileerror', ev => {
+      const img = ev.tile, c = ev.coords;
+      if (img.dataset.fb) return;
+      img.dataset.fb = '1';
+      img.src = `https://cache.kartverket.no/v1/service?layer=${layer}&style=default&tilematrixset=webmercator&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=${c.z}&TileCol=${c.x}&TileRow=${c.y}`;
+    });
+    return tl;
+  }
+
+  map.createPane('topoOverlay');
+  map.getPane('topoOverlay').style.zIndex = 250;
+  map.getPane('topoOverlay').classList.add('topo-overlay');
+
+  const base = {
+    'Flyfoto': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxNativeZoom: 18, maxZoom: 20,
+      attribution: 'Flyfoto: Esri, Maxar, Earthstar Geographics'
+    }),
+    'Topografisk': kvLayer('topo'),
+    'Topo gråtone': kvLayer('topograatone')
+  };
+  const overlays = {
+    'Høydekurver og navn over flyfoto': kvLayer('topograatone', { pane: 'topoOverlay', opacity: 0.6 })
+  };
+  const savedBase = store.get('viltobs-lag');
+  (base[savedBase] || base['Flyfoto']).addTo(map);
+  if (store.get('viltobs-overlay') === '1') overlays['Høydekurver og navn over flyfoto'].addTo(map);
+  L.control.layers(base, overlays, { position: 'topright', collapsed: true }).addTo(map);
+  map.on('baselayerchange', e => store.set('viltobs-lag', e.name));
+  map.on('overlayadd', () => store.set('viltobs-overlay', '1'));
+  map.on('overlayremove', () => store.set('viltobs-overlay', '0'));
+
+  const markerLayer = L.layerGroup().addTo(map);
+  const markers = new Map();
+
+  function abbr(art) {
+    const s = String(art || '?').trim();
+    return (s.charAt(0).toUpperCase() + s.charAt(1).toLowerCase()) || '?';
+  }
+  function pinIcon(o, draft) {
+    const wrap = el('div', { class: 'pinwrap' + (draft ? ' draft' : '') }, el('div', { class: 'pin' }), el('b', { text: draft ? '+' : abbr(o.art) }));
+    if (!draft && o.antall > 1) wrap.append(el('i', { text: String(o.antall) }));
+    return L.divIcon({ html: wrap, className: 'pinicon', iconSize: [30, 30], iconAnchor: [15, 36], popupAnchor: [0, -32] });
+  }
+
+  function popupEl(o) {
+    const del = el('button', { type: 'button', class: 'danger', text: 'Slett' });
+    let armTimer = null;
+    del.addEventListener('click', async () => {
+      if (!del.classList.contains('armed')) {
+        del.classList.add('armed');
+        del.textContent = 'Trykk igjen for å slette';
+        armTimer = setTimeout(() => { del.classList.remove('armed'); del.textContent = 'Slett'; }, 4000);
+        return;
+      }
+      clearTimeout(armTimer);
+      del.disabled = true;
+      del.textContent = 'Sletter …';
+      try {
+        await call('deleteObservation', o.id);
+        state.obs = state.obs.filter(x => x.id !== o.id);
+        map.closePopup();
+        render();
+        toast('Observasjonen er slettet');
+      } catch (err) {
+        del.disabled = false;
+        del.textContent = 'Slett';
+        toast('Kunne ikke slette: ' + msg(err), true);
+      }
+    });
+
+    const coords = el('p', { class: 'coords', text: coordText(o) });
+    coords.style.whiteSpace = 'pre-line';
+    const copy = el('button', { type: 'button', text: 'Kopier koordinater' });
+    copy.addEventListener('click', () => {
+      const txt = coordText(o);
+      const fallback = () => {
+        const r = document.createRange();
+        r.selectNodeContents(coords);
+        const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        toast('Koordinatene er markert. Kopier dem med Ctrl+C eller hold inne.');
+      };
+      try {
+        navigator.clipboard.writeText(txt).then(() => toast('Koordinatene er kopiert'), fallback);
+      } catch (e) { fallback(); }
+    });
+
+    const dl = el('dl', null);
+    [['Vær', o.vaer], ['Vind fra', o.vind], ['Snø', o.sno]].forEach(([k, v]) => {
+      dl.append(el('dt', { text: k }), el('dd', { text: v || '–' }));
+    });
+
+    return el('div', { class: 'pp' },
+      el('h3', { text: o.art + (o.antall > 1 ? ` × ${o.antall}` : '') }),
+      el('p', { class: 'when', text: fmtTid(o.tid) }),
+      dl,
+      o.vaerdata ? el('p', { class: 'src', text: o.vaerdata }) : null,
+      coords,
+      el('div', { class: 'btns' },
+        el('a', { href: nibUrl(o), target: '_blank', rel: 'noopener', text: 'Norge i bilder ↗' }),
+        copy,
+        el('button', { type: 'button', text: 'Rediger', onclick: () => { map.closePopup(); openForm(o); } }),
+        del)
+    );
+  }
+
+  function render() {
+    markerLayer.clearLayers();
+    markers.clear();
+    state.obs.forEach(o => {
+      if (o.id === state.hiddenId) return;
+      if (!isFinite(o.lat) || !isFinite(o.lon)) return;
+      const m = L.marker([o.lat, o.lon], { icon: pinIcon(o), title: `${o.art} ${fmtTid(o.tid)}`, riseOnHover: true })
+        .bindPopup(() => popupEl(o), { maxWidth: 300, autoPanPaddingTopLeft: [10, 80] });
+      m.addTo(markerLayer);
+      markers.set(o.id, m);
+    });
+    $('#count').textContent = state.obs.length;
+    renderList();
+  }
+
+  function sorted() {
+    return state.obs.slice().sort((a, b) => String(b.tid).localeCompare(String(a.tid)));
+  }
+
+  function renderList() {
+    const ul = $('#list');
+    ul.replaceChildren();
+    const items = sorted();
+    $('#list-empty').hidden = !(state.loaded && items.length === 0);
+    $('#list-fit').hidden = items.length === 0;
+    items.forEach(o => {
+      const meta = [o.vaer, o.vind ? 'vind ' + o.vind : '', o.sno ? 'snø: ' + o.sno.toLowerCase() : ''].filter(Boolean).join(' · ');
+      const b = el('button', { type: 'button' },
+        el('span', { class: 'art', text: o.art + (o.antall > 1 ? ` ×${o.antall}` : '') }),
+        el('span', { class: 't', text: fmtTid(o.tid) }),
+        el('span', { class: 'm', text: meta || '–' }));
+      b.addEventListener('click', () => {
+        if (window.innerWidth < 780) $('#listpanel').hidden = true;
+        const m = markers.get(o.id);
+        map.flyTo([o.lat, o.lon], Math.max(map.getZoom(), 15), { duration: 0.6 });
+        if (m) map.once('moveend', () => m.openPopup());
+      });
+      ul.append(el('li', null, b));
+    });
+  }
+
+  async function refresh(quiet) {
+    try {
+      const rows = await call('listObservations');
+      state.obs = Array.isArray(rows) ? rows : [];
+      state.loaded = true;
+      render();
+      if (!quiet && state.obs.length === 0) toast('Ingen observasjoner ennå. Trykk «Ny observasjon» for å legge inn den første.');
+    } catch (err) {
+      state.loaded = true;
+      renderList();
+      if (!quiet) toast('Kunne ikke hente observasjoner: ' + msg(err), true);
+    }
+  }
+
+  map.on('popupopen', () => { state.popupOpen = true; });
+  map.on('popupclose', () => { state.popupOpen = false; });
+
+  /* ---------- Plassering og skjema ---------- */
+  function fillSelect(sel, list, blank) {
+    sel.replaceChildren(el('option', { value: '', text: blank }), ...list.map(v => el('option', { value: v, text: v })));
+  }
+  fillSelect($('#f-vaer'), VAER, 'Velg vær');
+  fillSelect($('#f-vind'), VIND, 'Velg retning');
+  fillSelect($('#f-sno'), SNO, 'Velg snøforhold');
+  ARTER.forEach(a => $('#arter').append(el('option', { value: a })));
+
+  function setMode(m) {
+    state.mode = m;
+    document.body.classList.toggle('placing', m === 'place');
+    $('#banner').hidden = m !== 'place';
+    $('#fab').hidden = m !== 'view';
+  }
+
+  $('#fab').addEventListener('click', () => {
+    $('#listpanel').hidden = true;
+    map.closePopup();
+    setMode('place');
+  });
+  $('#place-cancel').addEventListener('click', () => setMode('view'));
+  map.on('click', e => { if (state.mode === 'place') openForm({ lat: e.latlng.lat, lon: e.latlng.lng }); });
+
+  function showPos() {
+    const d = state.draft;
+    const u = toUTM33(d.lat, d.lon);
+    $('#f-pos').replaceChildren(
+      el('span', { text: `N ${grp(u.n)}  Ø ${grp(u.e)}` }),
+      el('span', { text: `${deg(d.lat, 5)}° N ${deg(d.lon, 5)}° Ø` }));
+  }
+
+  function setAuto(field, on) { $('#auto-' + field).hidden = !on; }
+
+  function setWx(st, text) {
+    $('#wx').dataset.state = st;
+    $('#wx-text').textContent = text;
+  }
+
+  function openForm(o) {
+    const isNew = !o.id;
+    setMode('edit');
+    state.draft = {
+      id: o.id || null, lat: o.lat, lon: o.lon, vaerdata: o.vaerdata || ''
+    };
+    state.touched = { vaer: !isNew, vind: !isNew };
+    $('#sheet-title').textContent = isNew ? 'Ny observasjon' : 'Rediger observasjon';
+    $('#f-art').value = o.art || '';
+    $('#f-antall').value = o.antall || 1;
+    $('#f-tid').value = o.tid || nowLocal();
+    $('#f-vaer').value = o.vaer || '';
+    $('#f-vind').value = o.vind || '';
+    $('#f-sno').value = o.sno || '';
+    $('#f-err').hidden = true;
+    setAuto('vaer', false); setAuto('vind', false);
+
+    if (!isNew) { state.hiddenId = o.id; render(); }
+    if (state.draftMarker) map.removeLayer(state.draftMarker);
+    state.draftMarker = L.marker([o.lat, o.lon], { icon: pinIcon(o, true), draggable: true, autoPan: true, zIndexOffset: 1000 }).addTo(map);
+    state.draftMarker.on('dragend', ev => {
+      const ll = ev.target.getLatLng();
+      state.draft.lat = ll.lat; state.draft.lon = ll.lng;
+      showPos();
+      fetchWeather();
+    });
+    showPos();
+    $('#sheet').hidden = false;
+    $('#listpanel').hidden = true;
+
+    // Hold markøren synlig over skjemaet på mobil
+    if (window.innerWidth < 780) {
+      const pt = map.latLngToContainerPoint([o.lat, o.lon]);
+      const target = window.innerHeight * 0.22;
+      map.panBy([0, pt.y - target], { animate: true });
+    }
+
+    if (isNew) fetchWeather();
+    else setWx(o.vaerdata ? 'ok' : 'error', o.vaerdata || 'Ingen lagrede værdata. Trykk «Hent på nytt».');
+  }
+
+  function closeForm() {
+    if (state.draftMarker) { map.removeLayer(state.draftMarker); state.draftMarker = null; }
+    state.draft = null;
+    state.wxSeq++;
+    const hadHidden = state.hiddenId;
+    state.hiddenId = null;
+    $('#sheet').hidden = true;
+    setMode('view');
+    if (hadHidden) render();
+  }
+  $('#f-close').addEventListener('click', closeForm);
+
+  async function fetchWeather() {
+    const d = state.draft;
+    const tid = $('#f-tid').value;
+    if (!d || !tid) return;
+    const seq = ++state.wxSeq;
+    setWx('loading', 'Henter værdata fra MET …');
+    try {
+      const w = await call('getWeather', d.lat, d.lon, tid);
+      if (seq !== state.wxSeq || !state.draft) return;
+      if (!w || !w.ok) {
+        d.vaerdata = '';
+        setWx('error', (w && w.message) || 'Fant ikke værdata. Fyll inn vær og vind selv.');
+        return;
+      }
+      if (!state.touched.vaer && w.vaer) { $('#f-vaer').value = w.vaer; setAuto('vaer', true); }
+      if (!state.touched.vind && w.vind) { $('#f-vind').value = w.vind; setAuto('vind', true); }
+      d.vaerdata = w.summary;
+      setWx('ok', w.summary);
+    } catch (err) {
+      if (seq === state.wxSeq) setWx('error', 'Kunne ikke hente værdata: ' + msg(err));
+    }
+  }
+
+  let tidTimer = null;
+  $('#f-tid').addEventListener('change', () => { clearTimeout(tidTimer); tidTimer = setTimeout(fetchWeather, 500); });
+  $('#f-vaer').addEventListener('change', () => { state.touched.vaer = true; setAuto('vaer', false); });
+  $('#f-vind').addEventListener('change', () => { state.touched.vind = true; setAuto('vind', false); });
+  $('#wx-refresh').addEventListener('click', () => { state.touched = { vaer: false, vind: false }; fetchWeather(); });
+
+  $('#obs-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = state.draft;
+    if (!d) return;
+    const art = $('#f-art').value.trim();
+    const antall = parseInt($('#f-antall').value, 10);
+    const tid = $('#f-tid').value;
+    const errEl = $('#f-err');
+    const fail = (t, f) => { errEl.textContent = t; errEl.hidden = false; if (f) f.focus(); };
+    if (!art) return fail('Skriv inn eller velg art.', $('#f-art'));
+    if (!(antall >= 1 && antall <= 999)) return fail('Antall må være mellom 1 og 999.', $('#f-antall'));
+    if (!tid) return fail('Velg dato og klokkeslett.', $('#f-tid'));
+    errEl.hidden = true;
+
+    const u = toUTM33(d.lat, d.lon);
+    const payload = {
+      id: d.id, art, antall, tid,
+      vaer: $('#f-vaer').value, vind: $('#f-vind').value, sno: $('#f-sno').value,
+      lat: d.lat, lon: d.lon, e: Math.round(u.e), n: Math.round(u.n), vaerdata: d.vaerdata || ''
+    };
+    const btn = $('#f-save');
+    btn.disabled = true; btn.textContent = 'Lagrer …';
+    try {
+      const saved = await call('saveObservation', payload);
+      const i = state.obs.findIndex(x => x.id === saved.id);
+      if (i >= 0) state.obs[i] = saved; else state.obs.push(saved);
+      closeForm();
+      render();
+      toast('Observasjonen er lagret');
+      const m = markers.get(saved.id);
+      if (m) m.openPopup();
+    } catch (err) {
+      fail('Kunne ikke lagre: ' + msg(err));
+    } finally {
+      btn.disabled = false; btn.textContent = 'Lagre observasjon';
+    }
+  });
+
+  /* ---------- Liste ---------- */
+  $('#btn-list').addEventListener('click', () => {
+    const p = $('#listpanel');
+    if (state.mode !== 'view') return;
+    p.hidden = !p.hidden;
+  });
+  $('#list-close').addEventListener('click', () => { $('#listpanel').hidden = true; });
+  $('#list-fit').addEventListener('click', () => {
+    const pts = state.obs.filter(o => isFinite(o.lat)).map(o => [o.lat, o.lon]);
+    if (!pts.length) return;
+    if (window.innerWidth < 780) $('#listpanel').hidden = true;
+    map.fitBounds(pts, { padding: [50, 50], maxZoom: 16 });
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (state.mode === 'place') setMode('view');
+    else if (state.mode === 'edit') closeForm();
+    else $('#listpanel').hidden = true;
+  });
+
+  /* ---------- Start ---------- */
+  setMode('view');
+  renderList();
+  refresh(false);
+  setInterval(() => {
+    if (document.visibilityState === 'visible' && state.mode === 'view' && !state.popupOpen) refresh(true);
+  }, POLL_MS);
+})();
+</script>
+</body>
+</html>
