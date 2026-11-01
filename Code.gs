@@ -1,4 +1,6 @@
 /**
+ * @OnlyCurrentDoc  Skriptet får bare tilgang til regnearket det er knyttet til.
+ *
  * Viltobservasjoner Linge – server (Google Apps Script)
  *
  * Lagrer observasjoner i arket «Observasjoner» i regnearket dette
