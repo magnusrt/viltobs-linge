@@ -160,7 +160,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
 .counts .total{grid-column:1/-1;margin:0;color:var(--ink-2);font-size:14px}
 .counts .total b{color:var(--ink);font-variant-numeric:tabular-nums}
 .banner .go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-.editing .crosshair{display:none!important}
+.editing .crosshair,.popup-open .crosshair{display:none!important}
 .placing .crosshair::after{content:"";position:absolute;inset:13px;border:2px solid #fff;border-radius:50%}
 
 /* Liste */
@@ -321,8 +321,6 @@ input[type=number]{font-variant-numeric:tabular-nums}
   <p id="banner-text">Flytt kartet så krysset står der dyret ble sett</p>
   <div class="btns">
     <button type="button" class="go" id="pl-cross">Legg til ved krysset</button>
-    <button type="button" id="pl-here">Der jeg står</button>
-    <button type="button" id="pl-peil">Retning og avstand fra meg</button>
     <button type="button" class="cancel" id="pl-cancel">Avbryt</button>
   </div>
 </div>
@@ -346,14 +344,6 @@ input[type=number]{font-variant-numeric:tabular-nums}
     <div class="f">
       <label for="f-tid">Dato og klokkeslett</label>
       <input id="f-tid" type="datetime-local">
-    </div>
-
-    <div class="peil" id="f-peil" hidden>
-      <div class="row2 even">
-        <div class="f"><label for="f-brg">Peiling fra deg</label><div class="unit"><input id="f-brg" type="number" inputmode="numeric" min="0" max="359" step="1"><span>°</span></div></div>
-        <div class="f"><label for="f-dist">Avstand</label><div class="unit"><input id="f-dist" type="number" inputmode="numeric" min="1" max="9999" step="1"><span>m</span></div></div>
-      </div>
-      <p class="hint">Den stiplede linjen er siktlinjen fra der du står.</p>
     </div>
 
     <div class="wx" id="wx" data-state="loading"><p id="wx-text">Henter værdata …</p><button type="button" id="wx-refresh">Hent på nytt</button></div>
@@ -637,14 +627,9 @@ input[type=number]{font-variant-numeric:tabular-nums}
         else { const kolle = ri(1, 4); kat = { bukk: r() < 0.15 ? 1 : 0, kolle, kalv: Math.min(kolle, ri(0, kolle)), ungdyr: ri(0, 2) }; }
         antall = kat.bukk + kat.kolle + kat.kalv + kat.ungdyr;
       } else antall = ri(1, 2);
-      let fra = null;
-      if (r() < 0.35) {
-        const brg = Math.floor(r() * 360), dist = 80 + Math.floor(r() * 500);
-        const o = dest(lat, lon, (brg + 180) % 360, dist);
-        fra = { lat: o[0], lon: o[1], retning: brg, avstand: dist };
-      }
+      const fra = null;
       out.push({
-        id: 'ex2-' + i, eksempel: true, registrert: new Date(now).toISOString(), tid, art, antall, kat,
+        id: 'ex3-' + i, eksempel: true, registrert: new Date(now).toISOString(), tid, art, antall, kat,
         gikk: pick(['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV', 'Ro', 'Ro', '']),
         vaer: pick(winter ? ['Skyet', 'Snøvær', 'Sol / klart', 'Tåke', 'Skyet'] : ['Sol / klart', 'Skyet', 'Regn', 'Tåke', 'Skyet']),
         vind: pick(['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV', 'Stille', 'V', 'SV']),
@@ -742,6 +727,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
   const markerLayer = L.layerGroup().addTo(map);
   const sightLayer = L.layerGroup().addTo(map);
   const markers = new Map();
+  map.on('popupopen', () => document.body.classList.add('popup-open'));
+  map.on('popupclose', () => document.body.classList.remove('popup-open'));
 
   function markerIcon(o, draft) {
     const col = draft ? 'var(--brand-draft, #1E3B2F)' : markColor(o.art);
@@ -1323,8 +1310,6 @@ input[type=number]{font-variant-numeric:tabular-nums}
     $('#t-new').hidden = m !== 'view';
     $('#banner-text').textContent = m === 'move' ? 'Flytt kartet så krysset står på den nye posisjonen' : 'Flytt kartet så krysset står der dyret ble sett';
     $('#pl-cross').textContent = m === 'move' ? 'Bruk denne posisjonen' : 'Legg til ved krysset';
-    $('#pl-here').hidden = m === 'move';
-    $('#pl-peil').hidden = m === 'move';
     if (placing) updateReadout();
   }
   $('#t-new').addEventListener('click', () => { closePanels(); map.closePopup(); setMode('place'); });
@@ -1353,7 +1338,6 @@ input[type=number]{font-variant-numeric:tabular-nums}
       if (d.fra) {
         const bd = brgDist(d.fra.lat, d.fra.lon, d.lat, d.lon);
         d.fra.retning = bd.brg; d.fra.avstand = bd.dist;
-        $('#f-brg').value = Math.round(bd.brg); $('#f-dist').value = Math.round(bd.dist);
       }
       state.draftMarker.setLatLng([d.lat, d.lon]);
       drawDraftLine(); showPos(); scheduleWeather();
@@ -1367,26 +1351,6 @@ input[type=number]{font-variant-numeric:tabular-nums}
     }
   }
   $('#f-move').addEventListener('click', startMove);
-
-  $('#pl-here').addEventListener('click', async () => {
-    const b = $('#pl-here'); b.disabled = true; b.textContent = 'Finner posisjon …';
-    try { const p = await whenGps(); openForm({ lat: p[0], lon: p[1] }); }
-    catch (e) { /* melding vises fra onPosErr */ }
-    finally { b.disabled = false; b.textContent = 'Der jeg står'; }
-  });
-  $('#pl-peil').addEventListener('click', async () => {
-    const b = $('#pl-peil'); b.disabled = true; b.textContent = 'Finner posisjon …';
-    try {
-      const p = await whenGps();
-      const c = map.getCenter();
-      let { brg, dist } = brgDist(p[0], p[1], c.lat, c.lng);
-      if (dist < 50 || dist > 3000) { brg = 0; dist = 200; }
-      brg = Math.round(brg); dist = Math.round(dist / 10) * 10;
-      const t = dest(p[0], p[1], brg, dist);
-      openForm({ lat: t[0], lon: t[1], fra: { lat: p[0], lon: p[1], retning: brg, avstand: dist } });
-    } catch (e) { /* melding vises fra onPosErr */ }
-    finally { b.disabled = false; b.textContent = 'Retning og avstand fra meg'; }
-  });
 
   function showPos() {
     const d = state.draft;
@@ -1423,23 +1387,10 @@ input[type=number]{font-variant-numeric:tabular-nums}
     setSel('vaer', o.vaer); setSel('vind', o.vind); setSel('gikk', o.gikk); setSel('sno', o.sno);
     $('#auto-vaer').hidden = true; $('#auto-vind').hidden = true;
     $('#f-err').hidden = true;
-    $('#f-peil').hidden = !state.draft.fra;
-    if (state.draft.fra) { $('#f-brg').value = Math.round(state.draft.fra.retning); $('#f-dist').value = Math.round(state.draft.fra.avstand); }
 
     if (!isNew) { state.hiddenId = o.id; renderMarkers(); }
     if (state.draftMarker) map.removeLayer(state.draftMarker);
     state.draftMarker = L.marker([o.lat, o.lon], { icon: markerIcon(o, true), draggable: false, zIndexOffset: 1000 }).addTo(map);
-    state.draftMarker.on('drag', ev => {
-      const ll = ev.target.getLatLng();
-      state.draft.lat = ll.lat; state.draft.lon = ll.lng;
-      if (state.draft.fra) {
-        const bd = brgDist(state.draft.fra.lat, state.draft.fra.lon, ll.lat, ll.lng);
-        state.draft.fra.retning = bd.brg; state.draft.fra.avstand = bd.dist;
-        $('#f-brg').value = Math.round(bd.brg); $('#f-dist').value = Math.round(bd.dist);
-      }
-      drawDraftLine(); showPos();
-    });
-    state.draftMarker.on('dragend', () => scheduleWeather());
     drawDraftLine();
     showPos();
     $('#p-form').hidden = false;
@@ -1470,21 +1421,6 @@ input[type=number]{font-variant-numeric:tabular-nums}
     if (had) renderMarkers();
   }
   $('#f-close').addEventListener('click', closeForm);
-
-  function onPeilInput() {
-    const d = state.draft;
-    if (!d || !d.fra) return;
-    const brg = ((Number($('#f-brg').value) % 360) + 360) % 360;
-    const dist = Math.max(1, Number($('#f-dist').value) || 0);
-    if (!isFinite(brg) || !isFinite(dist)) return;
-    d.fra.retning = brg; d.fra.avstand = dist;
-    const t = dest(d.fra.lat, d.fra.lon, brg, dist);
-    d.lat = t[0]; d.lon = t[1];
-    state.draftMarker.setLatLng(t);
-    drawDraftLine(); showPos(); scheduleWeather();
-  }
-  $('#f-brg').addEventListener('input', onPeilInput);
-  $('#f-dist').addEventListener('input', onPeilInput);
 
   let wxTimer = null;
   function scheduleWeather() { clearTimeout(wxTimer); wxTimer = setTimeout(fetchWeather, 700); }
@@ -1560,7 +1496,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     setMode('view');
     let data = readAll();
     if (data == null && !prefs.utenEksempler) { data = makeExamples(); writeAll(data); }
-    else if (Array.isArray(data) && data.some(o => o.eksempel && !String(o.id).startsWith('ex2-'))) {
+    else if (Array.isArray(data) && data.some(o => o.eksempel && !String(o.id).startsWith('ex3-'))) {
       // bytt ut eksempler fra forrige versjon (mange arter) med nye for hjort og rådyr
       data = data.filter(o => !o.eksempel);
       if (!prefs.utenEksempler) data = data.concat(makeExamples());
