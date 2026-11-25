@@ -13,6 +13,19 @@ Delt kart for å registrere hvor det er observert vilt ved Linge i Valldal (Fjor
 - Hver observasjon viser koordinater i UTM 33 (EUREF89) og grader, med lenke til norgeibilder.no.
 - Alle med lenken ser de samme observasjonene. Kartet oppdateres hvert minutt.
 
+## Prototype uten database
+
+`docs/index.html` er en frittstående versjon for å teste utforming og funksjoner. Den publiseres med GitHub Pages på https://magnusrt.github.io/viltobs-linge/
+
+- Tre designforslag (A, B, C) som byttes øverst i appen.
+- Min posisjon (GPS), med testmodus som simulerer at du står på gården Linge. Punktet kan dras.
+- Farge og filter per art og periode.
+- Retningen dyret gikk, vist som pil på markøren.
+- Statistikk per art, per måned og per time på døgnet.
+- 28 merkede eksempelobservasjoner som kan fjernes.
+
+Observasjoner lagres bare i nettleseren på enheten. Værdata hentes direkte fra Open-Meteo (MET Nordic), eller via `getWeather` i `Code.gs` når siden kjøres i Apps Script.
+
 ## Filer
 
 | Fil | Innhold |

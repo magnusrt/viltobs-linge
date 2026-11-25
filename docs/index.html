@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="no" data-style="a">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Viltobservasjoner Linge</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Saira:wght@400;500;600&family=Saira+Condensed:wght@600;700&display=swap">
+<style>
+/* Prototype med tre designforslag (A Granskog, B Kartblad, C Skumring).
+   Kartet fyller skjermen; verktøy, paneler og statuslinje legger seg over.
+   Hver stil setter bare tokens og plassering; komponentene er felles. */
+
+/* ---------- A: Granskog (lys, med mørk variant) ---------- */
+:root, :root[data-style="a"]{
+  --bg:#EEF1EB; --surface:#FBFCF9; --surface-2:#EEF2EC; --field:#FFFFFF;
+  --ink:#17211B; --ink-2:#56635A; --line-soft:#D3DACF; --rule:#D3DACF;
+  --brand:#1E3B2F; --brand-ink:#F2F5EF; --accent:#E4572E; --accent-ink:#FFFFFF;
+  --chip-bg:#FFFFFF; --chip-on-bg:#1E3B2F; --chip-on-ink:#F2F5EF;
+  --ok:#2E7A4C; --danger:#B42318;
+  --seq:#1E5A3E; --seq-ink:#FFFFFF; --empty:#E6EBE3; --grid:#E1E6DE; --axis:#B9C2B6;
+  --s0:#7D857E; --s1:#257de0; --s2:#f47230; --s3:#00b894; --s4:#f2a600; --s5:#ee7fac; --s6:#008a17; --s7:#6a4ce2;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --radius:14px; --radius-s:9px; --shadow:0 6px 22px rgba(12,22,16,.22);
+  --top:0px; --dock:0px; --tap:44px; --tile-filter:none;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root[data-style="a"]{
+    --bg:#0F1511; --surface:#18211B; --surface-2:#212C24; --field:#111813;
+    --ink:#E5EBE4; --ink-2:#9AA89E; --line-soft:#2F3C33; --rule:#2F3C33;
+    --brand:#24473A; --chip-bg:#18211B; --chip-on-bg:#E5EBE4; --chip-on-ink:#18211B;
+    --ok:#6CC08F; --danger:#FF8A7A;
+    --seq:#8FD3A9; --seq-ink:#0F1511; --empty:#222C25; --grid:#28332B; --axis:#465348;
+    --s0:#8E968F; --s1:#338ced; --s2:#e76624; --s3:#00a888; --s4:#d28e05; --s5:#e24d8b; --s6:#0aac23; --s7:#9887ef;
+    --shadow:0 6px 22px rgba(0,0,0,.5);
+    color-scheme:dark;
+  }
+}
+
+/* ---------- B: Kartblad (papirhvitt, skarpe linjer, kartrødt) ---------- */
+:root[data-style="b"]{
+  --bg:#FFFFFF; --surface:#FFFFFF; --surface-2:#F4F4F1; --field:#FFFFFF;
+  --ink:#111111; --ink-2:#565656; --line-soft:#CFCFCA; --rule:#111111;
+  --brand:#FFFFFF; --brand-ink:#111111; --accent:#C8231B; --accent-ink:#FFFFFF;
+  --chip-bg:#FFFFFF; --chip-on-bg:#111111; --chip-on-ink:#FFFFFF;
+  --ok:#1F6B3A; --danger:#C8231B;
+  --seq:#7A4A22; --seq-ink:#FFFFFF; --empty:#EFEFEB; --grid:#E4E4DF; --axis:#111111;
+  --s0:#7D857E; --s1:#257de0; --s2:#f47230; --s3:#00b894; --s4:#f2a600; --s5:#ee7fac; --s6:#008a17; --s7:#6a4ce2;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --radius:0px; --radius-s:0px; --shadow:none;
+  --top:48px; --dock:84px; --tap:44px; --tile-filter:none;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root[data-style="b"]{
+    --bg:#141618; --surface:#17191B; --surface-2:#202326; --field:#101214;
+    --ink:#EDEDEA; --ink-2:#A6A6A0; --line-soft:#34383C; --rule:#EDEDEA;
+    --brand:#17191B; --brand-ink:#EDEDEA; --accent:#FF5A4E; --accent-ink:#17191B;
+    --chip-bg:#17191B; --chip-on-bg:#EDEDEA; --chip-on-ink:#17191B;
+    --ok:#6CC08F; --danger:#FF7A70;
+    --seq:#E0A86E; --seq-ink:#17191B; --empty:#24272A; --grid:#2A2E31; --axis:#EDEDEA;
+    --s0:#8E968F; --s1:#338ced; --s2:#e76624; --s3:#00a888; --s4:#d28e05; --s5:#e24d8b; --s6:#0aac23; --s7:#9887ef;
+    color-scheme:dark;
+  }
+}
+
+/* ---------- C: Skumring (mørk, store flater, ravgul) ---------- */
+:root[data-style="c"]{
+  --bg:#0B0F0C; --surface:#121813; --surface-2:#1B231C; --field:#0D120E;
+  --ink:#ECE6D6; --ink-2:#A8A291; --line-soft:#2C362E; --rule:#2C362E;
+  --brand:#121813; --brand-ink:#ECE6D6; --accent:#FFB547; --accent-ink:#1A1206;
+  --chip-bg:#1B231C; --chip-on-bg:#FFB547; --chip-on-ink:#1A1206;
+  --ok:#8FD3A9; --danger:#FF8A7A;
+  --seq:#FFB547; --seq-ink:#1A1206; --empty:#1E271F; --grid:#253026; --axis:#4A564B;
+  --s0:#8E968F; --s1:#338ced; --s2:#e76624; --s3:#00a888; --s4:#d28e05; --s5:#e24d8b; --s6:#0aac23; --s7:#9887ef;
+  --display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Saira",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --radius:20px; --radius-s:12px; --shadow:0 10px 30px rgba(0,0,0,.55);
+  --top:0px; --dock:80px; --tap:52px; --tile-filter:brightness(.72) saturate(.85) contrast(1.05);
+  color-scheme:dark;
+}
+
+/* ---------- Felles ---------- */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{font-family:var(--body);font-size:15px;line-height:1.4;color:var(--ink);background:var(--bg);-webkit-text-size-adjust:100%;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+svg.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+#map{position:fixed;inset:0;background:var(--bg)}
+.leaflet-tile-pane{filter:var(--tile-filter)}
+.placing #map,.placing .leaflet-interactive{cursor:crosshair}
+.topo-overlay{mix-blend-mode:multiply}
+
+/* Topplinje */
+.appbar{position:fixed;z-index:1000;display:flex;align-items:center;gap:10px}
+.brand{min-width:0}
+.brand b{display:block;font-family:var(--display);font-weight:700;letter-spacing:.06em;text-transform:uppercase;line-height:1.05;white-space:nowrap}
+.brand span{display:block;font-size:12px;opacity:.8;white-space:nowrap}
+.stylepick{position:fixed;z-index:1001;display:flex;align-items:center;gap:2px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);padding:3px;border-radius:999px}
+.stylepick span{font-size:12px;color:var(--ink-2);padding:0 6px 0 8px}
+.stylepick button{border:0;background:transparent;width:32px;height:32px;border-radius:999px;font-weight:600;font-family:var(--display);font-size:16px}
+.stylepick button[aria-pressed="true"]{background:var(--chip-on-bg);color:var(--chip-on-ink)}
+
+/* Verktøy */
+.toolbar{position:fixed;z-index:1000}
+.tb{position:relative;border:0;display:flex;align-items:center;gap:7px;background:var(--chip-bg);color:var(--ink);font-weight:500;min-height:var(--tap)}
+.tb .n{font-variant-numeric:tabular-nums;font-size:12px;font-weight:600;background:var(--surface-2);color:var(--ink);border-radius:999px;padding:1px 7px;min-width:22px;text-align:center}
+.tb .dot{position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--chip-bg)}
+.tb[aria-pressed="true"]{background:var(--chip-on-bg);color:var(--chip-on-ink)}
+.tb[aria-pressed="true"] .n{background:rgba(255,255,255,.2);color:inherit}
+#t-gps[data-state="searching"] svg{animation:pulse 1s ease-in-out infinite}
+#t-gps[data-state="on"]{color:var(--accent)}
+@keyframes pulse{50%{opacity:.35}}
+
+.readout{position:fixed;z-index:1000;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums}
+.status{position:fixed;z-index:999;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.pill{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);border-radius:999px;padding:4px 4px 4px 11px;font-size:13px}
+.pill button{border:0;background:var(--surface-2);border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600}
+.crosshair{display:none}
+
+/* Plasseringsbanner */
+.banner{position:fixed;z-index:1050;left:50%;transform:translateX(-50%);bottom:calc(var(--dock) + 22px + env(safe-area-inset-bottom,0px));width:min(480px, calc(100% - 24px));background:var(--surface);color:var(--ink);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;display:grid;gap:10px}
+.banner p{margin:0;font-weight:600;font-family:var(--display);font-size:19px;letter-spacing:.01em}
+.banner .btns{display:flex;flex-wrap:wrap;gap:8px}
+.banner button{border:1px solid var(--line-soft);background:var(--surface-2);border-radius:var(--radius-s);padding:9px 12px;font-weight:500;min-height:var(--tap);display:inline-flex;align-items:center;gap:6px}
+.banner .cancel{margin-left:auto;background:transparent}
+
+/* Paneler */
+.panel{position:fixed;z-index:1100;left:0;right:0;bottom:calc(var(--dock) + env(safe-area-inset-bottom,0px));max-height:calc(100% - var(--top) - var(--dock) - 56px);overflow:auto;background:var(--surface);color:var(--ink);border-radius:var(--radius) var(--radius) 0 0;box-shadow:0 -10px 34px rgba(0,0,0,.28);
+  padding-block:14px 18px;padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+@media (min-width:800px){
+  .panel{top:calc(var(--top) + 12px + env(safe-area-inset-top,0px));bottom:calc(var(--dock) + 12px + env(safe-area-inset-bottom,0px));right:12px;left:auto;width:410px;max-height:none;border-radius:var(--radius);box-shadow:var(--shadow)}
+}
+.panel-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px}
+.panel h2{margin:0;font-family:var(--display);font-weight:700;font-size:25px;letter-spacing:.01em;line-height:1.1;text-wrap:balance}
+.panel h3{margin:18px 0 8px;font-family:var(--display);font-weight:600;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.panel h3:first-child{margin-top:4px}
+.links{display:flex;gap:14px;flex:none}
+.link{border:0;background:transparent;color:var(--ink-2);padding:4px 0;text-decoration:underline;text-underline-offset:3px;font-size:15px}
+.sub{margin:-6px 0 10px;color:var(--ink-2);font-size:13.5px}
+
+/* Skjema */
+form{display:grid;gap:14px}
+.row2{display:grid;grid-template-columns:1fr 96px;gap:10px}
+.row2.even{grid-template-columns:1fr 1fr}
+.f{display:grid;gap:6px;min-width:0;border:0;margin:0;padding:0}
+.f > label,.f > legend{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);display:flex;gap:6px;align-items:center;padding:0;margin:0}
+fieldset.f > legend{float:left;width:100%;margin-bottom:6px}
+fieldset.f > legend + *{clear:both}
+.auto{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:11px;font-weight:600;color:var(--ok);border:1px solid currentColor;border-radius:999px;padding:0 6px;line-height:16px}
+input{width:100%;min-width:0;border:1px solid var(--line-soft);background:var(--field);border-radius:var(--radius-s);padding:10px;font-size:16px;min-height:var(--tap)}
+input[type=number]{font-variant-numeric:tabular-nums}
+.artfield{position:relative}
+.artfield input{padding-left:36px}
+.artfield .sw{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;border-radius:50%;background:var(--s0);box-shadow:0 0 0 2px var(--field)}
+.unit{position:relative}
+.unit input{padding-right:30px}
+.unit span{position:absolute;right:11px;top:50%;transform:translateY(-50%);color:var(--ink-2)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line-soft);background:var(--chip-bg);color:var(--ink);border-radius:999px;padding:6px 12px;min-height:36px;font-size:14px;display:inline-flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--chip-on-bg);color:var(--chip-on-ink);border-color:var(--chip-on-bg)}
+.chip .sw{width:11px;height:11px;border-radius:50%;flex:none;box-shadow:0 0 0 1.5px var(--chip-bg)}
+.chip .c{opacity:.7;font-size:12.5px}
+.chip.off{opacity:.55}
+.chip.off .sw{background:transparent!important;box-shadow:inset 0 0 0 1.5px var(--ink-2)}
+
+.roses{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rose{display:grid;grid-template-columns:repeat(3, minmax(0,44px));gap:4px}
+.rose button{border:1px solid var(--line-soft);background:var(--chip-bg);border-radius:var(--radius-s);height:40px;font-size:13px;font-weight:600;display:grid;place-items:center;padding:0}
+.rose button[aria-pressed="true"]{background:var(--chip-on-bg);color:var(--chip-on-ink);border-color:var(--chip-on-bg)}
+.rose button.mid{font-size:11.5px;font-weight:500}
+.rose svg{width:18px;height:18px;fill:currentColor}
+
+.wx{border:1px dashed var(--line-soft);border-radius:var(--radius-s);padding:9px 11px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between;font-size:13.5px}
+.wx p{margin:0;min-width:0}
+.wx[data-state=loading] p{color:var(--ink-2)}
+.wx[data-state=error] p{color:var(--danger)}
+.wx button{flex:none;border:0;background:transparent;color:var(--ink);font-weight:600;padding:0;text-decoration:underline;text-underline-offset:3px}
+.pos{font-family:var(--mono);font-size:12.5px;color:var(--ink-2);display:flex;flex-wrap:wrap;gap:2px 14px}
+.hint{margin:0;color:var(--ink-2);font-size:13px}
+.err{margin:0;color:var(--danger);font-size:14px}
+.save{border:0;border-radius:var(--radius-s);background:var(--accent);color:var(--accent-ink);padding:13px 16px;font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.03em;min-height:52px}
+.save:disabled{opacity:.6}
+.peil{display:grid;gap:8px;background:var(--surface-2);border-radius:var(--radius-s);padding:10px}
+
+/* Liste */
+.list{list-style:none;margin:0;padding:0}
+.list li + li{border-top:1px solid var(--line-soft)}
+.list button{width:100%;text-align:left;border:0;background:transparent;padding:10px 2px;display:grid;grid-template-columns:34px 1fr auto;gap:0 10px;align-items:center}
+.list .disc{grid-row:span 2}
+.disc{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:700 12.5px/1 var(--display);letter-spacing:.02em}
+.list .a{font-family:var(--display);font-weight:600;font-size:18px;line-height:1.15}
+.list .m{color:var(--ink-2);font-size:13px;grid-column:2}
+.list .t{font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--ink-2);grid-row:1;grid-column:3;text-align:right}
+.ex{font-size:11px;font-weight:600;color:var(--ink-2);border:1px solid var(--line-soft);border-radius:999px;padding:0 6px;margin-left:6px;vertical-align:2px;font-family:var(--body);letter-spacing:0}
+.empty{color:var(--ink-2);line-height:1.5;margin:6px 0 0;max-width:36ch}
+
+/* Statistikk */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{background:var(--surface-2);border-radius:var(--radius-s);padding:10px 12px;min-width:0}
+.tile .v{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.05}
+.tile .l{font-size:12.5px;color:var(--ink-2)}
+.chart{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--body);font-size:12.5px;fill:var(--ink-2)}
+.chart .nm{fill:var(--ink);font-size:13px}
+.chart .ax{fill:var(--ink-2);font-size:11.5px}
+.chart .in{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* Kartmarkører */
+.mk{background:none;border:0}
+.mk svg{display:block;overflow:visible;filter:drop-shadow(0 1px 3px rgba(0,0,0,.55))}
+.mk text{font:700 11.5px/1 var(--display);letter-spacing:.02em}
+.mk .badge{position:absolute;top:-2px;right:-4px;font:600 11px/1 var(--body);background:#111;color:#fff;border:1.5px solid #fff;border-radius:999px;padding:2px 5px;font-variant-numeric:tabular-nums}
+.me{background:none;border:0}
+.me i{position:absolute;inset:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px #111,0 0 0 6px rgba(255,255,255,.65),0 2px 8px rgba(0,0,0,.5)}
+.me i::after{content:"";position:absolute;inset:4px;border-radius:50%;background:#111}
+.me.sim{cursor:grab}
+.me.sim i{box-shadow:0 0 0 3px #E4572E,0 0 0 6px rgba(255,255,255,.75),0 2px 8px rgba(0,0,0,.5)}
+.me.sim i::after{background:#E4572E}
+.me b{position:absolute;top:31px;left:50%;transform:translateX(-50%);font:700 10px/1 system-ui,sans-serif;letter-spacing:.06em;background:#111;color:#fff;padding:3px 5px;border-radius:3px;white-space:nowrap}
+.fatal{position:fixed;inset:0;z-index:2000;display:grid;place-items:center;padding:24px;background:var(--bg);color:var(--ink);text-align:center}
+.fatal p{max-width:40ch;margin:0;font-size:16px;line-height:1.5}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid var(--line-soft);background:var(--chip-bg);color:var(--ink);border-radius:var(--radius-s);padding:10px 12px;text-align:left;min-height:var(--tap)}
+.toggle .sw2{flex:none;width:40px;height:24px;border-radius:999px;background:var(--line-soft);position:relative;transition:background .15s}
+.toggle .sw2::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s}
+.toggle[aria-pressed="true"] .sw2{background:var(--ok)}
+.toggle[aria-pressed="true"] .sw2::after{left:19px}
+.testrow{display:grid;gap:8px;margin-top:8px}
+.obsv{background:none;border:0}
+.obsv i{position:absolute;inset:0;border-radius:50%;background:#fff;border:2.5px solid #111}
+
+/* Popup */
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);border-radius:var(--radius-s)}
+.leaflet-popup-content{margin:12px 14px;font-family:var(--body);font-size:14px;line-height:1.4;min-width:230px}
+.leaflet-container a.leaflet-popup-close-button{color:var(--ink-2)}
+.pp h4{margin:0;font-family:var(--display);font-weight:700;font-size:22px;display:flex;align-items:center;gap:8px}
+.pp h4 .sw{width:12px;height:12px;border-radius:50%}
+.pp .when{color:var(--ink-2);font-variant-numeric:tabular-nums;margin:0 0 8px}
+.pp dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0 0 8px}
+.pp dt{color:var(--ink-2);font-size:13px}
+.pp dd{margin:0}
+.pp .src{color:var(--ink-2);font-size:12.5px;margin:0 0 8px}
+.pp .coords{font-family:var(--mono);font-size:12px;line-height:1.5;margin:0 0 10px;white-space:pre-line;user-select:all;-webkit-user-select:all}
+.pp .btns{display:flex;flex-wrap:wrap;gap:6px}
+.pp .btns a,.pp .btns button{border:1px solid var(--line-soft);border-radius:var(--radius-s);background:transparent;color:var(--ink);padding:6px 9px;font-size:13px;text-decoration:none;font-weight:500}
+.pp .btns .danger{color:var(--danger)}
+.pp .btns .danger.armed{background:var(--danger);color:#fff;border-color:var(--danger)}
+
+/* Kartkontroller */
+.leaflet-control-layers,.leaflet-bar a{background:var(--surface);color:var(--ink)}
+.leaflet-control-layers{border-radius:var(--radius-s)!important;box-shadow:var(--shadow)!important;border:0!important;font-family:var(--body);font-size:14px}
+.leaflet-control-layers-toggle{width:44px!important;height:44px!important}
+.leaflet-control-layers-expanded{padding:8px 12px}
+.leaflet-bar{border:0!important;box-shadow:var(--shadow)!important;border-radius:var(--radius-s)!important;overflow:hidden}
+.leaflet-bar a{border-bottom-color:var(--line-soft)!important;width:40px!important;height:40px!important;line-height:40px!important}
+.leaflet-top{top:calc(var(--top) + env(safe-area-inset-top,0px))}
+.leaflet-bottom{bottom:calc(var(--dock) + env(safe-area-inset-bottom,0px))}
+.leaflet-right{right:env(safe-area-inset-right,0px)}
+.leaflet-left{left:env(safe-area-inset-left,0px)}
+.leaflet-control-scale-line{background:rgba(255,255,255,.85);color:#17211B;border-color:#17211B}
+.leaflet-control-attribution{font-size:10.5px}
+
+.toast{position:fixed;z-index:1200;left:50%;transform:translateX(-50%);top:calc(var(--top) + 70px + env(safe-area-inset-top,0px));background:var(--ink);color:var(--surface);border-radius:var(--radius-s);padding:10px 14px;box-shadow:var(--shadow);max-width:calc(100% - 32px);font-size:14px}
+.toast.err{background:var(--danger);color:#fff}
+@media (prefers-reduced-motion: no-preference){
+  .panel{animation:up .18s ease-out}
+  @keyframes up{from{transform:translateY(14px);opacity:.5}to{transform:none;opacity:1}}
+}
+
+/* ===== A: Granskog — flytende kort og chips ===== */
+[data-style="a"] .appbar{top:calc(10px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));background:var(--brand);color:var(--brand-ink);border-radius:var(--radius-s);padding:7px 12px 6px;box-shadow:var(--shadow)}
+[data-style="a"] .brand b{font-size:17px}
+[data-style="a"] .stylepick{top:calc(10px + env(safe-area-inset-top,0px));right:calc(64px + env(safe-area-inset-right,0px))}
+[data-style="a"] .toolbar{top:calc(68px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));right:10px;display:flex;flex-wrap:wrap;gap:8px;pointer-events:none}
+[data-style="a"] .tb{pointer-events:auto;border-radius:var(--radius-s);box-shadow:var(--shadow);padding:0 12px;font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.02em}
+[data-style="a"] #t-new{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));border-radius:999px;background:var(--accent);color:var(--accent-ink);padding:0 20px;min-height:54px;font-size:19px;box-shadow:0 8px 22px rgba(160,50,20,.38)}
+[data-style="a"] #t-gps{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(98px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:50%;padding:0;justify-content:center}
+[data-style="a"] #t-gps span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+[data-style="a"] .readout{display:none}
+[data-style="a"] .status{top:calc(122px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));right:70px}
+[data-style="a"] .leaflet-bottom.leaflet-left{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+[data-style="a"] .panel{max-height:calc(100% - 128px - env(safe-area-inset-top,0px))}
+
+/* ===== B: Kartblad — dokket topp- og bunnlinje, trådkors, koordinatlinje ===== */
+[data-style="b"] .appbar{top:0;left:0;right:0;height:calc(var(--top) + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) max(16px, env(safe-area-inset-right,0px)) 0 max(16px, env(safe-area-inset-left,0px));background:var(--surface);color:var(--ink);border-bottom:1.5px solid var(--rule)}
+[data-style="b"] .brand{display:flex;align-items:baseline;gap:10px}
+[data-style="b"] .brand b{font-size:18px;letter-spacing:.1em}
+[data-style="b"] .brand span{font-family:var(--mono);font-size:11px;opacity:1;color:var(--ink-2)}
+[data-style="b"] .stylepick{top:calc(8px + env(safe-area-inset-top,0px));right:max(16px, env(safe-area-inset-right,0px));box-shadow:none;border:1.5px solid var(--rule);border-radius:0;padding:1px}
+[data-style="b"] .stylepick button{border-radius:0;width:30px;height:28px}
+[data-style="b"] .toolbar{left:0;right:0;bottom:0;height:calc(58px + env(safe-area-inset-bottom,0px));padding:0 env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:flex;background:var(--surface);border-top:1.5px solid var(--rule)}
+[data-style="b"] .tb{flex:1 1 0;min-width:0;flex-direction:column;justify-content:center;gap:3px;border-radius:0;padding:4px 2px;font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;background:transparent}
+[data-style="b"] .tb + .tb{border-left:1px solid var(--line-soft)}
+[data-style="b"] .tb[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+@media (max-width:519px){ [data-style="b"] .brand span{display:none} }
+[data-style="b"] .tb .n{position:absolute;top:5px;left:calc(50% + 6px);font-size:10.5px;padding:0 5px;min-width:18px;background:var(--ink);color:var(--surface)}
+[data-style="b"] .tb .dot{right:calc(50% - 16px)}
+[data-style="b"] #t-filter{order:1}
+[data-style="b"] #t-stats{order:2}
+[data-style="b"] #t-list{order:3}
+[data-style="b"] #t-gps{order:4}
+[data-style="b"] #t-new{order:5;flex:1.5 1 0;background:var(--accent);color:var(--accent-ink);border-left:0}
+[data-style="b"] .readout{left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));height:26px;display:flex;align-items:center;gap:14px;padding:0 max(16px, env(safe-area-inset-right,0px)) 0 max(16px, env(safe-area-inset-left,0px));background:var(--surface);color:var(--ink);border-top:1.5px solid var(--rule);white-space:nowrap;overflow:hidden}
+[data-style="b"] .readout .z{color:var(--ink-2)}
+[data-style="b"] .crosshair{display:block;position:fixed;z-index:500;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;background:linear-gradient(#fff,#fff) center/1.5px 100% no-repeat,linear-gradient(#fff,#fff) center/100% 1.5px no-repeat;mix-blend-mode:difference}
+[data-style="b"] .status{top:calc(var(--top) + 10px + env(safe-area-inset-top,0px));left:max(12px, env(safe-area-inset-left,0px));right:70px}
+[data-style="b"] .pill{border-radius:0;box-shadow:none;border:1.5px solid var(--rule)}
+[data-style="b"] .pill button{border-radius:0}
+[data-style="b"] .panel{box-shadow:none;border-top:1.5px solid var(--rule)}
+[data-style="b"] .panel h2{text-transform:uppercase;letter-spacing:.06em;font-size:22px}
+[data-style="b"] .panel h3{color:var(--ink);border-bottom:1.5px solid var(--rule);padding-bottom:4px}
+[data-style="b"] .chip{border-radius:0;border-color:var(--rule)}
+[data-style="b"] .rose button{border-color:var(--rule)}
+[data-style="b"] .tile{background:transparent;border:1.5px solid var(--rule)}
+[data-style="b"] .banner{border:1.5px solid var(--rule);box-shadow:none}
+[data-style="b"] .leaflet-bar,[data-style="b"] .leaflet-control-layers{box-shadow:none!important;border:1.5px solid var(--rule)!important}
+[data-style="b"] .leaflet-popup-content-wrapper{border:1.5px solid var(--rule);box-shadow:none}
+@media (min-width:800px){
+  [data-style="b"] .panel{top:calc(var(--top) + env(safe-area-inset-top,0px));bottom:calc(var(--dock) + env(safe-area-inset-bottom,0px));right:0;border-top:0;border-left:1.5px solid var(--rule)}
+}
+
+/* ===== C: Skumring — mørk, fanelinje med stor midtknapp ===== */
+[data-style="c"] .appbar{top:calc(10px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));background:rgba(18,24,19,.86);color:var(--ink);border-radius:999px;padding:7px 16px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
+[data-style="c"] .brand b{font-size:16px;color:var(--accent)}
+[data-style="c"] .brand span{font-size:11.5px}
+[data-style="c"] .stylepick{top:calc(10px + env(safe-area-inset-top,0px));right:calc(64px + env(safe-area-inset-right,0px))}
+[data-style="c"] .toolbar{left:0;right:0;bottom:0;height:calc(80px + env(safe-area-inset-bottom,0px));padding:0 max(6px, env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(6px, env(safe-area-inset-left,0px));display:flex;align-items:stretch;background:rgba(14,19,15,.94);border-top:1px solid var(--line-soft);backdrop-filter:blur(8px)}
+[data-style="c"] .tb{flex:1 1 0;min-width:0;flex-direction:column;justify-content:center;gap:4px;background:transparent;color:var(--ink-2);font-size:12.5px;font-weight:500;padding:6px 2px}
+[data-style="c"] .tb svg{width:24px;height:24px}
+[data-style="c"] .tb[aria-pressed="true"]{background:transparent;color:var(--accent)}
+[data-style="c"] .tb .n{position:absolute;top:8px;left:calc(50% + 6px);font-size:10.5px;padding:0 5px;min-width:18px;background:var(--surface-2)}
+[data-style="c"] .tb .dot{top:10px;right:calc(50% - 18px);box-shadow:0 0 0 2px #0E130F}
+[data-style="c"] #t-new{flex:0 0 auto;width:72px;align-self:flex-start;margin-top:-22px;height:72px;border-radius:50%;background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 5px #0E130F,0 8px 22px rgba(0,0,0,.6);padding:0;justify-content:center}
+[data-style="c"] #t-new svg{width:30px;height:30px;stroke-width:2.6}
+[data-style="c"] #t-new span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+[data-style="c"] .readout{display:none}
+[data-style="c"] .status{top:calc(66px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));right:70px}
+[data-style="c"] .panel{max-height:calc(100% - var(--dock) - 74px - env(safe-area-inset-top,0px));background:rgba(18,24,19,.97);box-shadow:0 -14px 40px rgba(0,0,0,.6)}
+[data-style="c"] .chip{min-height:42px;padding:8px 14px;font-size:15px}
+[data-style="c"] .rose{grid-template-columns:repeat(3, minmax(0,50px))}
+[data-style="c"] .rose button{height:46px}
+[data-style="c"] .save{min-height:58px;font-size:21px}
+[data-style="c"] .leaflet-control-scale-line{background:rgba(18,24,19,.85);color:var(--ink);border-color:var(--ink)}
+
+@media (min-width:800px){
+  [data-style="a"] .panel,[data-style="c"] .panel{top:calc(64px + env(safe-area-inset-top,0px))}
+}
+@media (min-width:800px){
+  [data-style="a"] .has-panel #t-new,[data-style="a"] .has-panel #t-gps{right:calc(436px + env(safe-area-inset-right,0px))}
+}
+@media (max-width:799px){ #p-form{max-height:62%} }
+@media (max-width:399px){ .stylepick span{display:none} }
+</style>
+</head>
+<body>
+<div id="map" role="application" aria-label="Kart over Linge"></div>
+<div class="fatal" id="fatal" hidden><p>Kartbiblioteket kunne ikke lastes. Sjekk nettforbindelsen, eller om en annonseblokkering stopper innhold fra cdnjs.cloudflare.com og cdn.jsdelivr.net. Last siden på nytt etterpå.</p></div>
+<div class="crosshair" aria-hidden="true"></div>
+
+<header class="appbar">
+  <div class="brand"><b>Linge viltobs</b><span id="brand-sub">Valldal · Fjord kommune</span></div>
+</header>
+<div class="stylepick" role="group" aria-label="Designforslag">
+  <span>Forslag</span>
+  <button type="button" data-s="a" aria-label="Forslag A, Granskog">A</button>
+  <button type="button" data-s="b" aria-label="Forslag B, Kartblad">B</button>
+  <button type="button" data-s="c" aria-label="Forslag C, Skumring">C</button>
+</div>
+
+<nav class="toolbar" aria-label="Verktøy">
+  <button class="tb" id="t-filter" type="button" aria-pressed="false">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16l-6.2 7.6V19l-3.6 1.6v-8L4 5z"/></svg><span>Filter</span><i class="dot" hidden></i>
+  </button>
+  <button class="tb" id="t-stats" type="button" aria-pressed="false">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-5"/></svg><span>Statistikk</span>
+  </button>
+  <button class="tb" id="t-new" type="button">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Ny observasjon</span>
+  </button>
+  <button class="tb" id="t-list" type="button" aria-pressed="false">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01"/></svg><span>Liste</span><b class="n" id="count">0</b>
+  </button>
+  <button class="tb" id="t-gps" type="button" data-state="off" aria-label="Vis min posisjon">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/><path d="M12 2v3.5M12 18.5V22M2 12h3.5M18.5 12H22"/></svg><span>Min posisjon</span>
+  </button>
+</nav>
+
+<div class="readout" id="readout" aria-live="off"></div>
+<div class="status" id="status"></div>
+
+<div class="banner" id="banner" hidden>
+  <p>Trykk i kartet der dyret ble sett</p>
+  <div class="btns">
+    <button type="button" id="pl-here">Der jeg står</button>
+    <button type="button" id="pl-peil">Retning og avstand fra meg</button>
+    <button type="button" class="cancel" id="pl-cancel">Avbryt</button>
+  </div>
+</div>
+
+<!-- Skjema -->
+<section class="panel" id="p-form" hidden aria-labelledby="form-title">
+  <div class="panel-head">
+    <h2 id="form-title">Ny observasjon</h2>
+    <div class="links"><button class="link" type="button" id="f-close">Avbryt</button></div>
+  </div>
+  <form id="obs-form" novalidate>
+    <div class="row2">
+      <div class="f">
+        <label for="f-art">Art</label>
+        <div class="artfield"><span class="sw" id="f-sw"></span><input id="f-art" list="arter" autocomplete="off" placeholder="Velg eller skriv" maxlength="40"></div>
+        <datalist id="arter"></datalist>
+      </div>
+      <div class="f">
+        <label for="f-antall">Antall</label>
+        <input id="f-antall" type="number" inputmode="numeric" min="1" max="999" step="1" value="1">
+      </div>
+    </div>
+    <div class="chips" id="f-artchips" aria-label="Vanlige arter"></div>
+
+    <div class="f">
+      <label for="f-tid">Dato og klokkeslett</label>
+      <input id="f-tid" type="datetime-local">
+    </div>
+
+    <div class="peil" id="f-peil" hidden>
+      <div class="row2 even">
+        <div class="f"><label for="f-brg">Peiling fra deg</label><div class="unit"><input id="f-brg" type="number" inputmode="numeric" min="0" max="359" step="1"><span>°</span></div></div>
+        <div class="f"><label for="f-dist">Avstand</label><div class="unit"><input id="f-dist" type="number" inputmode="numeric" min="1" max="9999" step="1"><span>m</span></div></div>
+      </div>
+      <p class="hint">Den stiplede linjen er siktlinjen fra der du står. Du kan også dra markøren.</p>
+    </div>
+
+    <div class="wx" id="wx" data-state="loading"><p id="wx-text">Henter værdata …</p><button type="button" id="wx-refresh">Hent på nytt</button></div>
+
+    <fieldset class="f"><legend>Vær <span class="auto" id="auto-vaer" hidden>fra MET</span></legend><div class="chips" id="f-vaer"></div></fieldset>
+
+    <div class="roses">
+      <fieldset class="f"><legend>Vind fra <span class="auto" id="auto-vind" hidden>fra MET</span></legend><div class="rose" id="f-vind"></div></fieldset>
+      <fieldset class="f"><legend>Dyret gikk mot</legend><div class="rose" id="f-gikk"></div></fieldset>
+    </div>
+
+    <fieldset class="f"><legend>Snøforhold</legend><div class="chips" id="f-sno"></div></fieldset>
+
+    <div class="pos" id="f-pos"></div>
+    <p class="hint" id="f-drag">Dra markøren i kartet for å justere posisjonen.</p>
+    <p class="err" id="f-err" hidden></p>
+    <button class="save" type="submit" id="f-save">Lagre observasjon</button>
+  </form>
+</section>
+
+<!-- Filter -->
+<section class="panel" id="p-filter" hidden aria-labelledby="filter-title">
+  <div class="panel-head">
+    <h2 id="filter-title">Filter</h2>
+    <div class="links"><button class="link" type="button" id="flt-reset">Nullstill</button><button class="link" type="button" data-close>Lukk</button></div>
+  </div>
+  <p class="sub" id="flt-sum"></p>
+  <h3>Art</h3>
+  <div class="chips" id="flt-art"></div>
+  <div class="links" style="margin-top:8px"><button class="link" type="button" id="flt-all">Vis alle</button><button class="link" type="button" id="flt-none">Skjul alle</button></div>
+  <h3>Periode</h3>
+  <div class="chips" id="flt-per"></div>
+  <div class="row2 even" id="flt-custom" style="margin-top:10px" hidden>
+    <div class="f"><label for="flt-fra">Fra</label><input id="flt-fra" type="date"></div>
+    <div class="f"><label for="flt-til">Til</label><input id="flt-til" type="date"></div>
+  </div>
+  <h3>Testing</h3>
+  <div class="testrow">
+    <button class="toggle" type="button" id="sim-toggle" aria-pressed="false"><span>Simuler at jeg står på gården Linge</span><span class="sw2" aria-hidden="true"></span></button>
+    <p class="hint" id="sim-text"></p>
+    <div><button class="chip" type="button" id="sim-reset">Flytt tilbake til gården Linge</button></div>
+    <p class="hint" id="ex-text"></p>
+    <div><button class="chip" type="button" id="ex-toggle"></button></div>
+  </div>
+</section>
+
+<!-- Statistikk -->
+<section class="panel" id="p-stats" hidden aria-labelledby="stats-title">
+  <div class="panel-head">
+    <h2 id="stats-title">Statistikk</h2>
+    <div class="links"><button class="link" type="button" data-close>Lukk</button></div>
+  </div>
+  <p class="sub" id="stats-sub"></p>
+  <div id="stats-body"></div>
+</section>
+
+<!-- Liste -->
+<section class="panel" id="p-list" hidden aria-labelledby="list-title">
+  <div class="panel-head">
+    <h2 id="list-title">Observasjoner</h2>
+    <div class="links"><button class="link" type="button" id="list-fit">Vis alle i kartet</button><button class="link" type="button" data-close>Lukk</button></div>
+  </div>
+  <p class="sub" id="list-sub"></p>
+  <ul class="list" id="list"></ul>
+  <p class="empty" id="list-empty" hidden></p>
+</section>
+
+<div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>window.L || document.write('<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"><\/script>');</script>
+<script>
+(function () {
+  'use strict';
+  if (!window.L) { document.getElementById('fatal').hidden = false; return; }
+
+  /* ================= Oppsett ================= */
+  const START = { lat: 62.2960, lon: 7.2000, zoom: 14 };   // Linge, Valldal
+  const LINGE_GARD = [62.2872, 7.2060];                     // omtrentlig: litt øst for ferjekaia, kan dras
+  const SPECIES = [['Hjort', 'Hj'], ['Elg', 'El'], ['Rådyr', 'Rå'], ['Rødrev', 'Rø'], ['Gaupe', 'Ga'], ['Hare', 'Ha'], ['Storfugl', 'St']];
+  const MARK = ['#257de0', '#f47230', '#00b894', '#f2a600', '#ee7fac', '#008a17', '#6a4ce2'];
+  const ANNET = '#7D857E';
+  const EXTRA = ['Bjørn', 'Ulv', 'Jerv', 'Grevling', 'Mår', 'Orrfugl', 'Lirype', 'Fjellrype', 'Villrein', 'Kongeørn', 'Havørn'];
+  const VAER = ['Sol / klart', 'Skyet', 'Regn', 'Snøvær', 'Tåke'];
+  const DIRS = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'];
+  const ROSE = ['NV', 'N', 'NØ', 'V', '*', 'Ø', 'SV', 'S', 'SØ'];
+  const SNO = ['Ingen', 'Flekkvis', 'Dekket', 'Nysnø', 'Sporsnø'];
+  const PERIODER = [['alt', 'Alt'], ['7', 'Siste 7 døgn'], ['30', 'Siste 30 døgn'], ['365', 'Siste 12 mnd'], ['aar', 'I år'], ['egen', 'Velg datoer']];
+  const MND = ['jan.', 'feb.', 'mars', 'apr.', 'mai', 'juni', 'juli', 'aug.', 'sep.', 'okt.', 'nov.', 'des.'];
+  const MND1 = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
+  const KEY = 'viltobs-linge-v1', KEY_UI = 'viltobs-linge-ui-v1';
+  const TZ = 'Europe/Oslo';
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  /* ================= Hjelpere ================= */
+  function el(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    if (attrs) for (const k in attrs) {
+      const v = attrs[k];
+      if (v == null || v === false) continue;
+      if (k === 'class') n.className = v;
+      else if (k === 'text') n.textContent = v;
+      else if (k === 'style') n.setAttribute('style', v);
+      else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k, v === true ? '' : v);
+    }
+    kids.flat(Infinity).forEach(c => { if (c != null && c !== false) n.append(c.nodeType ? c : document.createTextNode(String(c))); });
+    return n;
+  }
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  function sv(tag, attrs, ...kids) {
+    const n = document.createElementNS(SVGNS, tag);
+    let st = '';
+    if (attrs) for (const k in attrs) {
+      const v = attrs[k];
+      if (v == null) continue;
+      if ((k === 'fill' || k === 'stroke') && String(v).startsWith('var(')) st += `${k}:${v};`;
+      else n.setAttribute(k, v);
+    }
+    if (st) n.setAttribute('style', st + (n.getAttribute('style') || ''));
+    kids.flat(Infinity).forEach(c => { if (c != null) n.append(c.nodeType ? c : document.createTextNode(String(c))); });
+    return n;
+  }
+  const pad = n => String(n).padStart(2, '0');
+  const deg = (x, d) => x.toFixed(d).replace('.', ',');
+  const grp = n => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  const num1 = x => (Math.round(Number(x) * 10) / 10).toFixed(1).replace('.', ',');
+  const uid = () => (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : 'o' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+
+  let toastTimer = null;
+  function toast(text, isErr) {
+    const t = $('#toast');
+    t.textContent = text;
+    t.classList.toggle('err', !!isErr);
+    t.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.hidden = true; }, isErr ? 6500 : 3200);
+  }
+
+  const ui = {
+    load() { try { return JSON.parse(localStorage.getItem(KEY_UI) || '{}') || {}; } catch (e) { return {}; } },
+    save(patch) { const cur = Object.assign(ui.load(), patch); try { localStorage.setItem(KEY_UI, JSON.stringify(cur)); } catch (e) { /* ignorer */ } }
+  };
+
+  /* Tid: alle tidspunkt lagres som lokal tid i Norge, «ÅÅÅÅ-MM-DDTtt:mm» */
+  const fmtOslo = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  function osloStr(epoch) {
+    const p = {};
+    fmtOslo.formatToParts(new Date(epoch)).forEach(x => { p[x.type] = x.value; });
+    return `${p.year}-${p.month}-${p.day}T${p.hour === '24' ? '00' : p.hour}:${p.minute}`;
+  }
+  function osloEpoch(str) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(String(str || ''));
+    if (!m) return NaN;
+    const wall = Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+    const off = t => Date.parse(osloStr(t) + ':00Z') - t;
+    let e = wall - off(wall);
+    const o2 = off(e);
+    if (wall - o2 !== e) e = wall - o2;
+    return e;
+  }
+  const osloNow = () => osloStr(Date.now());
+  function fmtTid(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(s || '');
+    if (!m) return s || '';
+    const yr = m[1] !== osloNow().slice(0, 4) ? ' ' + m[1] : '';
+    return `${+m[3]}. ${MND[+m[2] - 1]}${yr} kl. ${m[4]}:${m[5]}`;
+  }
+
+  /* Arter og farger (fast rekkefølge; andre arter får grått) */
+  function slot(art) {
+    const a = String(art || '').trim().toLowerCase();
+    return SPECIES.findIndex(s => s[0].toLowerCase() === a);
+  }
+  function canon(art) { const i = slot(art); if (i >= 0) return SPECIES[i][0]; const x = EXTRA.find(e => e.toLowerCase() === String(art).trim().toLowerCase()); return x || String(art).trim(); }
+  const markColor = art => { const i = slot(art); return i < 0 ? ANNET : MARK[i]; };
+  const cssColor = art => { const i = slot(art); return i < 0 ? 'var(--s0)' : `var(--s${i + 1})`; };
+  const inkOn = art => (slot(art) === 3 ? '#0b0b0b' : '#ffffff');
+  function abbr(art) {
+    const i = slot(art);
+    if (i >= 0) return SPECIES[i][1];
+    const s = String(art || '?').trim();
+    return (s.charAt(0).toUpperCase() + s.charAt(1).toLowerCase()) || '?';
+  }
+  const dirDeg = d => { const i = DIRS.indexOf(d); return i < 0 ? null : i * 45; };
+
+  /* Geodesi */
+  const RAD = Math.PI / 180, RE = 6371008.8;
+  function dest(lat, lon, brg, dist) {
+    const p1 = lat * RAD, l1 = lon * RAD, t = brg * RAD, d = dist / RE;
+    const p2 = Math.asin(Math.sin(p1) * Math.cos(d) + Math.cos(p1) * Math.sin(d) * Math.cos(t));
+    const l2 = l1 + Math.atan2(Math.sin(t) * Math.sin(d) * Math.cos(p1), Math.cos(d) - Math.sin(p1) * Math.sin(p2));
+    return [p2 / RAD, l2 / RAD];
+  }
+  function brgDist(aLat, aLon, bLat, bLon) {
+    const p1 = aLat * RAD, p2 = bLat * RAD, dl = (bLon - aLon) * RAD, dp = p2 - p1;
+    const y = Math.sin(dl) * Math.cos(p2), x = Math.cos(p1) * Math.sin(p2) - Math.sin(p1) * Math.cos(p2) * Math.cos(dl);
+    const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+    return { brg: (Math.atan2(y, x) / RAD + 360) % 360, dist: 2 * RE * Math.asin(Math.sqrt(a)) };
+  }
+  // EUREF89 UTM sone 33 (Krüger-serie)
+  function toUTM33(lat, lon) {
+    const a = 6378137, f = 1 / 298.257222101, k0 = 0.9996, lon0 = 15 * RAD;
+    const n = f / (2 - f), n2 = n * n, n3 = n2 * n;
+    const A = a / (1 + n) * (1 + n2 / 4 + n2 * n2 / 64);
+    const al = [0, n / 2 - 2 * n2 / 3 + 5 * n3 / 16, 13 * n2 / 48 - 3 * n3 / 5, 61 * n3 / 240];
+    const phi = lat * RAD, lam = lon * RAD - lon0;
+    const e = 2 * Math.sqrt(n) / (1 + n);
+    const t = Math.sinh(Math.atanh(Math.sin(phi)) - e * Math.atanh(e * Math.sin(phi)));
+    const xi = Math.atan2(t, Math.cos(lam));
+    const eta = Math.atanh(Math.sin(lam) / Math.sqrt(1 + t * t));
+    let E = eta, N = xi;
+    for (let j = 1; j <= 3; j++) {
+      E += al[j] * Math.cos(2 * j * xi) * Math.sinh(2 * j * eta);
+      N += al[j] * Math.sin(2 * j * xi) * Math.cosh(2 * j * eta);
+    }
+    return { e: 500000 + k0 * A * E, n: k0 * A * N };
+  }
+  const fmtDist = m => m < 1000 ? `${Math.round(m)} m` : `${deg(m / 1000, 1)} km`;
+  function coordText(lat, lon) {
+    const u = toUTM33(lat, lon);
+    return `N ${grp(u.n)}  Ø ${grp(u.e)} (UTM 33)\n${deg(lat, 5)}° N  ${deg(lon, 5)}° Ø`;
+  }
+  function nibUrl(o) {
+    const u = toUTM33(o.lat, o.lon);
+    return `https://norgeibilder.no/?x=${Math.round(u.e)}&y=${Math.round(u.n)}&level=17&utm=33`;
+  }
+
+  /* ================= Lagring (byttes mot Apps Script senere) ================= */
+  let storageOk = true, memData = null;
+  function readAll() {
+    try { const s = localStorage.getItem(KEY); return s == null ? null : JSON.parse(s); }
+    catch (e) { storageOk = false; return memData; }
+  }
+  function writeAll(arr) {
+    memData = arr;
+    try { localStorage.setItem(KEY, JSON.stringify(arr)); } catch (e) { storageOk = false; }
+  }
+  const Store = {
+    async list() { return readAll() || []; },
+    async save(o) { const all = readAll() || []; const i = all.findIndex(x => x.id === o.id); if (i >= 0) all[i] = o; else all.push(o); writeAll(all); return o; },
+    async remove(id) { writeAll((readAll() || []).filter(x => x.id !== id)); return true; },
+    async replaceAll(arr) { writeAll(arr); return arr; }
+  };
+
+  /* Eksempeldata: tydelig merket, kan fjernes */
+  function rng(seed) {
+    return function () {
+      seed = seed + 0x6D2B79F5 | 0;
+      let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function makeExamples() {
+    const r = rng(20261125);
+    const pick = a => a[Math.floor(r() * a.length)];
+    const W = [['Hjort', 9], ['Rådyr', 5], ['Rødrev', 4], ['Elg', 3], ['Storfugl', 2], ['Hare', 2], ['Gaupe', 1]];
+    const tot = W.reduce((s, x) => s + x[1], 0);
+    const pickArt = () => { let x = r() * tot; for (const [a, w] of W) { if ((x -= w) < 0) return a; } return 'Hjort'; };
+    const out = [];
+    const now = Date.now();
+    for (let i = 0; i < 28; i++) {
+      const art = pickArt();
+      const day = osloStr(now - Math.floor(r() * 395) * 864e5).slice(0, 10);
+      let h = r() < 0.5 ? 5 + Math.floor(r() * 4) : 16 + Math.floor(r() * 5);
+      if (r() < 0.12) h = 10 + Math.floor(r() * 5);
+      let tid = `${day}T${pad(h)}:${pad(Math.floor(r() * 12) * 5)}`;
+      if (osloEpoch(tid) > now) tid = osloStr(now - 3 * 3600e3);
+      const mon = +tid.slice(5, 7);
+      const winter = mon <= 4 || mon >= 11;
+      const lat = 62.2945 + r() * 0.019, lon = 7.172 + r() * 0.055;
+      const antall = art === 'Hjort' ? 1 + Math.floor(r() * r() * 6) : art === 'Elg' ? 1 + Math.floor(r() * 3) : art === 'Rådyr' ? 1 + Math.floor(r() * 2) : 1;
+      let fra = null;
+      if (r() < 0.35) {
+        const brg = Math.floor(r() * 360), dist = 80 + Math.floor(r() * 500);
+        const o = dest(lat, lon, (brg + 180) % 360, dist);
+        fra = { lat: o[0], lon: o[1], retning: brg, avstand: dist };
+      }
+      out.push({
+        id: 'ex-' + i, eksempel: true, registrert: new Date(now).toISOString(), tid, art, antall,
+        gikk: pick(['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV', 'Ro', 'Ro', '']),
+        vaer: pick(winter ? ['Skyet', 'Snøvær', 'Sol / klart', 'Tåke', 'Skyet'] : ['Sol / klart', 'Skyet', 'Regn', 'Tåke', 'Skyet']),
+        vind: pick(['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV', 'Stille', 'V', 'SV']),
+        sno: winter ? pick(['Dekket', 'Nysnø', 'Sporsnø', 'Flekkvis']) : (mon === 5 || mon === 10 ? pick(['Ingen', 'Flekkvis']) : 'Ingen'),
+        lat: Math.round(lat * 1e6) / 1e6, lon: Math.round(lon * 1e6) / 1e6, fra, vaerdata: ''
+      });
+    }
+    return out;
+  }
+
+  /* ================= Tilstand ================= */
+  const prefs = ui.load();
+  const state = {
+    obs: [], mode: 'view', draft: null, draftMarker: null, draftLine: null, hiddenId: null,
+    touched: { vaer: false, vind: false }, wxSeq: 0, panel: null,
+    filter: { skjul: new Set(prefs.skjul || []), periode: prefs.periode || 'alt', fra: prefs.fra || '', til: prefs.til || '' }
+  };
+  const selection = { vaer: '', vind: '', gikk: '', sno: '' };
+
+  /* ================= Stilvalg ================= */
+  function setStyle(s) {
+    if (!['a', 'b', 'c'].includes(s)) s = 'a';
+    document.documentElement.dataset.style = s;
+    $$('.stylepick button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === s)));
+    ui.save({ stil: s });
+    $('#brand-sub').textContent = s === 'b' ? 'EUREF89 · UTM 33 · Fjord kommune' : 'Valldal · Fjord kommune';
+    setTimeout(() => { map.invalidateSize(); updateReadout(); if (state.panel === 'p-stats') renderStats(); }, 30);
+  }
+  $$('.stylepick button').forEach(b => b.addEventListener('click', () => { setStyle(b.dataset.s); try { history.replaceState(null, '', '#' + b.dataset.s); } catch (e) { /* ignorer */ } }));
+
+  /* ================= Kart ================= */
+  const map = L.map('map', { zoomControl: false, center: [START.lat, START.lon], zoom: START.zoom, maxZoom: 20 });
+  L.control.zoom({ position: 'bottomleft', zoomInTitle: 'Zoom inn', zoomOutTitle: 'Zoom ut' }).addTo(map);
+  L.control.scale({ imperial: false, position: 'bottomleft' }).addTo(map);
+  map.attributionControl.setPrefix('<a href="https://leafletjs.com" target="_blank" rel="noopener">Leaflet</a>');
+
+  const KV_ATTR = '© <a href="https://www.kartverket.no/" target="_blank" rel="noopener">Kartverket</a>';
+  function kvLayer(layer, extra) {
+    const tl = L.tileLayer(`https://cache.kartverket.no/v1/wmts/1.0.0/${layer}/default/webmercator/{z}/{y}/{x}.png`,
+      Object.assign({ maxNativeZoom: 18, maxZoom: 20, attribution: KV_ATTR }, extra));
+    tl.on('tileerror', ev => {
+      const img = ev.tile, c = ev.coords;
+      if (img.dataset.fb) return;
+      img.dataset.fb = '1';
+      img.src = `https://cache.kartverket.no/v1/service?layer=${layer}&style=default&tilematrixset=webmercator&Service=WMTS&Request=GetTile&Version=1.0.0&Format=image%2Fpng&TileMatrix=${c.z}&TileCol=${c.x}&TileRow=${c.y}`;
+    });
+    return tl;
+  }
+  map.createPane('topoOverlay');
+  map.getPane('topoOverlay').style.zIndex = 250;
+  map.getPane('topoOverlay').classList.add('topo-overlay');
+  const base = {
+    'Flyfoto': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxNativeZoom: 18, maxZoom: 20, attribution: 'Flyfoto: Esri, Maxar, Earthstar Geographics' }),
+    'Topografisk': kvLayer('topo'),
+    'Topo gråtone': kvLayer('topograatone'),
+    'OpenStreetMap': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxNativeZoom: 19, maxZoom: 20, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>-bidragsytere' })
+  };
+  const OVL = 'Høydekurver og navn over flyfoto';
+  const overlays = { [OVL]: kvLayer('topograatone', { pane: 'topoOverlay', opacity: 0.6 }) };
+  const BASE_NAMES = Object.keys(base);
+  const KILDE = { 'Flyfoto': 'Esri', 'Topografisk': 'Kartverket', 'Topo gråtone': 'Kartverket', 'OpenStreetMap': 'OpenStreetMap' };
+
+  // Kartlagshelse: bytter automatisk lag hvis et lag ikke laster en eneste rute
+  const health = {};
+  let currentBase = base[prefs.lag] ? prefs.lag : 'Flyfoto';
+  BASE_NAMES.forEach(name => {
+    health[name] = { ok: 0, err: 0, failed: false };
+    base[name].on('tileload', () => { health[name].ok++; if (state.mapFail) { state.mapFail = false; renderStatus(); } });
+    base[name].on('tileerror', () => {
+      const h = health[name];
+      h.err++;
+      if (name !== currentBase || h.failed || h.ok > 0 || h.err < 8) return;
+      h.failed = true;
+      const next = BASE_NAMES.find(n => !health[n].failed);
+      if (next) {
+        switchBase(next);
+        toast(`${name} fra ${KILDE[name]} lastet ikke. Viser ${next} i stedet.`, true);
+      } else {
+        state.mapFail = true;
+        renderStatus();
+      }
+    });
+  });
+  function switchBase(name) {
+    if (base[currentBase]) map.removeLayer(base[currentBase]);
+    currentBase = name;
+    base[name].addTo(map);
+  }
+  base[currentBase].addTo(map);
+  if (prefs.overlay) overlays[OVL].addTo(map);
+  L.control.layers(base, overlays, { position: 'topright', collapsed: true }).addTo(map);
+  map.on('baselayerchange', e => {
+    currentBase = e.name;
+    health[e.name] = { ok: 0, err: 0, failed: false };
+    ui.save({ lag: e.name });
+  });
+  map.on('overlayadd', () => ui.save({ overlay: true }));
+  map.on('overlayremove', () => ui.save({ overlay: false }));
+
+  const markerLayer = L.layerGroup().addTo(map);
+  const sightLayer = L.layerGroup().addTo(map);
+  const markers = new Map();
+
+  function markerIcon(o, draft) {
+    const col = draft ? 'var(--brand-draft, #1E3B2F)' : markColor(o.art);
+    const svg = sv('svg', { width: 44, height: 44, viewBox: '-22 -22 44 44' });
+    const d = dirDeg(o.gikk);
+    if (!draft && d != null) {
+      svg.append(sv('g', { transform: `rotate(${d})` },
+        sv('path', { d: 'M0,-21 L7,-11 L-7,-11 Z', fill: col, stroke: '#fff', 'stroke-width': 1.6, 'stroke-linejoin': 'round' })));
+    }
+    svg.append(sv('circle', { r: 13, fill: draft ? '#1E3B2F' : col, stroke: '#fff', 'stroke-width': 2.5, 'stroke-dasharray': draft ? '4 3' : null }));
+    if (!draft && o.gikk === 'Ro') svg.append(sv('circle', { r: 17.5, fill: 'none', stroke: '#fff', 'stroke-width': 1.5, 'stroke-dasharray': '2 3' }));
+    svg.append(sv('text', { 'text-anchor': 'middle', y: 4, fill: draft ? '#fff' : inkOn(o.art) }, draft ? '+' : abbr(o.art)));
+    const wrap = el('div', { style: 'position:relative;width:44px;height:44px' }, svg);
+    if (!draft && o.antall > 1) wrap.append(el('span', { class: 'badge', text: String(o.antall) }));
+    return L.divIcon({ html: wrap, className: 'mk', iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -16] });
+  }
+  const observerIcon = () => L.divIcon({ html: '<i></i>', className: 'obsv', iconSize: [12, 12], iconAnchor: [6, 6] });
+
+  function sightLine(target, fra) {
+    target.clearLayers();
+    if (!fra) return;
+    target.addLayer(L.polyline([[fra.lat, fra.lon], [fra.to[0], fra.to[1]]], { color: '#fff', weight: 4, opacity: .85, interactive: false }));
+    target.addLayer(L.polyline([[fra.lat, fra.lon], [fra.to[0], fra.to[1]]], { color: '#111', weight: 2, dashArray: '6 6', interactive: false }));
+    target.addLayer(L.marker([fra.lat, fra.lon], { icon: observerIcon(), interactive: false, keyboard: false }));
+  }
+
+  /* ================= Filter ================= */
+  function periodRange() {
+    const f = state.filter, now = Date.now();
+    if (f.periode === '7') return [now - 7 * 864e5, Infinity];
+    if (f.periode === '30') return [now - 30 * 864e5, Infinity];
+    if (f.periode === '365') return [now - 365 * 864e5, Infinity];
+    if (f.periode === 'aar') return [osloEpoch(osloNow().slice(0, 4) + '-01-01T00:00'), Infinity];
+    if (f.periode === 'egen') {
+      const a = f.fra ? osloEpoch(f.fra + 'T00:00') : -Infinity;
+      const b = f.til ? osloEpoch(f.til + 'T23:59') : Infinity;
+      return [a, b];
+    }
+    return [-Infinity, Infinity];
+  }
+  function filtered() {
+    const [a, b] = periodRange();
+    return state.obs.filter(o => {
+      if (state.filter.skjul.has(canon(o.art))) return false;
+      const t = osloEpoch(o.tid);
+      return !(t < a || t > b);
+    });
+  }
+  const filterActive = () => state.filter.skjul.size > 0 || state.filter.periode !== 'alt';
+  function saveFilter() { ui.save({ skjul: Array.from(state.filter.skjul), periode: state.filter.periode, fra: state.filter.fra, til: state.filter.til }); }
+
+  /* ================= Visning ================= */
+  function popupEl(o) {
+    const del = el('button', { type: 'button', class: 'danger', text: 'Slett' });
+    let armTimer = null;
+    del.addEventListener('click', async () => {
+      if (!del.classList.contains('armed')) {
+        del.classList.add('armed'); del.textContent = 'Trykk igjen for å slette';
+        armTimer = setTimeout(() => { del.classList.remove('armed'); del.textContent = 'Slett'; }, 4000);
+        return;
+      }
+      clearTimeout(armTimer);
+      await Store.remove(o.id);
+      state.obs = state.obs.filter(x => x.id !== o.id);
+      map.closePopup();
+      renderAll();
+      toast('Observasjonen er slettet');
+    });
+    const coords = el('p', { class: 'coords', text: coordText(o.lat, o.lon) });
+    const copy = el('button', { type: 'button', text: 'Kopier koordinater' });
+    copy.addEventListener('click', () => {
+      const fallback = () => {
+        const rg = document.createRange(); rg.selectNodeContents(coords);
+        const s = window.getSelection(); s.removeAllRanges(); s.addRange(rg);
+        toast('Koordinatene er markert. Kopier med Ctrl+C eller hold inne.');
+      };
+      try { navigator.clipboard.writeText(coordText(o.lat, o.lon)).then(() => toast('Koordinatene er kopiert'), fallback); } catch (e) { fallback(); }
+    });
+    const rows = [
+      ['Antall', String(o.antall)],
+      ['Gikk mot', o.gikk === 'Ro' ? 'Sto i ro' : (o.gikk || '–')],
+      ['Vær', o.vaer || '–'], ['Vind fra', o.vind || '–'], ['Snø', o.sno || '–']
+    ];
+    if (o.fra) rows.push(['Sett fra', `${fmtDist(o.fra.avstand)}, peiling ${Math.round(o.fra.retning)}°`]);
+    if (gps.pos) rows.push(['Fra deg nå', fmtDist(brgDist(gps.pos[0], gps.pos[1], o.lat, o.lon).dist)]);
+    const dl = el('dl', null, rows.map(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })]));
+    return el('div', { class: 'pp' },
+      el('h4', null, el('span', { class: 'sw', style: `background:${markColor(o.art)}` }), o.art, o.eksempel ? el('span', { class: 'ex', text: 'Eksempel' }) : null),
+      el('p', { class: 'when', text: fmtTid(o.tid) }),
+      dl,
+      o.vaerdata ? el('p', { class: 'src', text: o.vaerdata }) : null,
+      coords,
+      el('div', { class: 'btns' },
+        el('a', { href: nibUrl(o), target: '_blank', rel: 'noopener', text: 'Norge i bilder ↗' }),
+        copy,
+        el('button', { type: 'button', text: 'Rediger', onclick: () => { map.closePopup(); openForm(o); } }),
+        del));
+  }
+
+  function renderMarkers() {
+    markerLayer.clearLayers();
+    markers.clear();
+    filtered().forEach(o => {
+      if (o.id === state.hiddenId || !isFinite(o.lat) || !isFinite(o.lon)) return;
+      const m = L.marker([o.lat, o.lon], { icon: markerIcon(o), title: `${o.art}, ${fmtTid(o.tid)}`, riseOnHover: true })
+        .bindPopup(() => popupEl(o), { maxWidth: 300, autoPanPaddingTopLeft: [10, 150], autoPanPaddingBottomRight: [10, 110] });
+      m.on('click', e => { if (state.mode === 'place') { m.closePopup(); openForm({ lat: e.latlng.lat, lon: e.latlng.lng }); } });
+      m.on('popupopen', () => { if (o.fra) sightLine(sightLayer, Object.assign({ to: [o.lat, o.lon] }, o.fra)); });
+      m.on('popupclose', () => sightLayer.clearLayers());
+      m.addTo(markerLayer);
+      markers.set(o.id, m);
+    });
+  }
+
+  function sortedFiltered() { return filtered().sort((a, b) => String(b.tid).localeCompare(String(a.tid))); }
+
+  function renderList() {
+    const items = sortedFiltered();
+    $('#count').textContent = items.length;
+    $('#list-sub').textContent = filterActive() ? `${items.length} av ${state.obs.length} vises etter filteret` : `${items.length} observasjoner, nyeste først`;
+    $('#list-fit').hidden = items.length === 0;
+    const empty = $('#list-empty');
+    empty.hidden = items.length > 0;
+    empty.textContent = state.obs.length === 0 ? 'Ingen observasjoner ennå. Trykk «Ny observasjon» og deretter i kartet for å legge inn den første.' : 'Ingen observasjoner passer filteret. Endre eller nullstill filteret.';
+    const ul = $('#list');
+    ul.replaceChildren(...items.map(o => {
+      const meta = [o.gikk && o.gikk !== 'Ro' ? 'mot ' + o.gikk : (o.gikk === 'Ro' ? 'sto i ro' : ''), o.vaer, o.vind ? 'vind ' + o.vind : '', o.sno && o.sno !== 'Ingen' ? 'snø: ' + o.sno.toLowerCase() : ''].filter(Boolean).join(' · ');
+      const b = el('button', { type: 'button' },
+        el('span', { class: 'disc', style: `background:${markColor(o.art)};color:${inkOn(o.art)}`, text: abbr(o.art) }),
+        el('span', { class: 'a' }, o.art + (o.antall > 1 ? ` ×${o.antall}` : ''), o.eksempel ? el('span', { class: 'ex', text: 'Eksempel' }) : null),
+        el('span', { class: 't', text: fmtTid(o.tid).replace(' kl.', ',') }),
+        el('span', { class: 'm', text: meta || '–' }));
+      b.addEventListener('click', () => {
+        if (window.innerWidth < 800) closePanels();
+        map.flyTo([o.lat, o.lon], Math.max(map.getZoom(), 15), { duration: 0.6 });
+        const m = markers.get(o.id);
+        if (m) map.once('moveend', () => m.openPopup());
+      });
+      return el('li', null, b);
+    }));
+  }
+
+  function renderStatus() {
+    const box = $('#status');
+    const parts = [];
+    const nEx = state.obs.filter(o => o.eksempel).length;
+    if (nEx) parts.push(el('span', { class: 'pill' }, `${nEx} eksempler vises`, el('button', { type: 'button', text: 'Fjern', onclick: removeExamples })));
+    if (filterActive()) parts.push(el('span', { class: 'pill' }, `Filter: ${filtered().length} av ${state.obs.length}`, el('button', { type: 'button', text: 'Nullstill', onclick: resetFilter })));
+    if (sim.on) parts.push(el('span', { class: 'pill' }, 'Simulert posisjon: Linge', el('button', { type: 'button', text: 'Slå av', onclick: () => setSim(false) })));
+    if (state.mapFail) parts.push(el('span', { class: 'pill', style: 'white-space:normal' }, 'Ingen kartbilder lastet, verken fra Esri, Kartverket eller OpenStreetMap. Sjekk nettforbindelsen, eller om en annonseblokkering stopper dem.'));
+    box.replaceChildren(...parts);
+    $('#t-filter .dot').hidden = !filterActive();
+  }
+
+  function renderFilter() {
+    const counts = {};
+    state.obs.forEach(o => { const a = canon(o.art); counts[a] = (counts[a] || 0) + 1; });
+    const arts = Object.keys(counts).sort((a, b) => {
+      const sa = slot(a), sb = slot(b);
+      if (sa >= 0 || sb >= 0) return (sa < 0 ? 99 : sa) - (sb < 0 ? 99 : sb);
+      return a.localeCompare(b, 'nb');
+    });
+    $('#flt-art').replaceChildren(...(arts.length ? arts.map(a => {
+      const on = !state.filter.skjul.has(a);
+      return el('button', {
+        type: 'button', class: 'chip' + (on ? '' : ' off'), 'aria-pressed': String(on),
+        onclick: () => { on ? state.filter.skjul.add(a) : state.filter.skjul.delete(a); saveFilter(); renderAll(); }
+      }, el('span', { class: 'sw', style: `background:${cssColor(a)}` }), a, el('span', { class: 'c', text: counts[a] }));
+    }) : [el('p', { class: 'hint', text: 'Ingen arter registrert ennå.' })]));
+    $('#flt-per').replaceChildren(...PERIODER.map(([k, label]) => el('button', {
+      type: 'button', class: 'chip', 'aria-pressed': String(state.filter.periode === k),
+      onclick: () => { state.filter.periode = k; saveFilter(); renderAll(); }
+    }, label)));
+    $('#flt-custom').hidden = state.filter.periode !== 'egen';
+    $('#flt-fra').value = state.filter.fra;
+    $('#flt-til').value = state.filter.til;
+    const n = filtered().length;
+    $('#flt-sum').textContent = `Viser ${n} av ${state.obs.length} observasjoner`;
+    const nEx = state.obs.filter(o => o.eksempel).length;
+    $('#ex-text').textContent = nEx ? `${nEx} eksempler er lagt inn for å vise hvordan kartet og statistikken ser ut. Egne observasjoner påvirkes ikke.` : 'Ingen eksempler vises.';
+    $('#ex-toggle').textContent = nEx ? 'Fjern eksempler' : 'Legg inn eksempler';
+    $('#sim-toggle').setAttribute('aria-pressed', String(sim.on));
+    $('#sim-text').textContent = sim.on
+      ? 'Appen later som du står på det oransje punktet. Dra punktet i kartet for å flytte deg. «Der jeg står» og «Retning og avstand fra meg» bruker denne posisjonen.'
+      : 'Av. Appen bruker den ekte posisjonen fra enheten.';
+    $('#sim-reset').hidden = !sim.on;
+  }
+
+  function renderAll() {
+    renderMarkers();
+    renderList();
+    renderStatus();
+    if (state.panel === 'p-filter') renderFilter();
+    if (state.panel === 'p-stats') renderStats();
+  }
+
+  /* ================= Statistikk ================= */
+  function renderStats() {
+    const body = $('#stats-body');
+    const list = filtered();
+    $('#stats-sub').textContent = filterActive() ? `Etter filteret: ${list.length} av ${state.obs.length} observasjoner` : `Alle ${list.length} observasjoner`;
+    if (!list.length) { body.replaceChildren(el('p', { class: 'empty', text: 'Ingen observasjoner å vise. Endre filteret eller legg inn en observasjon.' })); return; }
+    const W = Math.max(280, Math.floor(body.clientWidth || 360));
+
+    const byArt = {};
+    list.forEach(o => {
+      const a = canon(o.art);
+      const r = byArt[a] || (byArt[a] = { art: a, n: 0, dyr: 0, mnd: new Array(12).fill(0) });
+      r.n++; r.dyr += Number(o.antall) || 1; r.mnd[+o.tid.slice(5, 7) - 1]++;
+    });
+    const rows = Object.values(byArt).sort((a, b) => b.n - a.n || a.art.localeCompare(b.art, 'nb'));
+    const totDyr = rows.reduce((s, r) => s + r.dyr, 0);
+
+    const tiles = el('div', { class: 'tiles' },
+      el('div', { class: 'tile' }, el('div', { class: 'v', text: list.length }), el('div', { class: 'l', text: 'observasjoner' })),
+      el('div', { class: 'tile' }, el('div', { class: 'v', text: totDyr }), el('div', { class: 'l', text: 'dyr totalt' })),
+      el('div', { class: 'tile' }, el('div', { class: 'v', text: rows.length }), el('div', { class: 'l', text: rows.length === 1 ? 'art' : 'arter' })));
+
+    // Per art: liggende søyler, verdi ved enden
+    const LBL = 84, VAL = 92, ROW = 28, BH = 14;
+    const maxN = Math.max(...rows.map(r => r.n));
+    const barMax = W - LBL - VAL;
+    const bars = sv('svg', { class: 'chart', viewBox: `0 0 ${W} ${rows.length * ROW}`, role: 'img', 'aria-label': 'Observasjoner per art' });
+    rows.forEach((r, i) => {
+      const y = i * ROW + (ROW - BH) / 2, w = Math.max(3, r.n / maxN * barMax), rr = Math.min(4, w);
+      const d = `M${LBL},${y} h${w - rr} a${rr},${rr} 0 0 1 ${rr},${rr} v${BH - 2 * rr} a${rr},${rr} 0 0 1 ${-rr},${rr} h${-(w - rr)} z`;
+      bars.append(
+        sv('text', { x: LBL - 10, y: y + BH / 2 + 4.5, 'text-anchor': 'end', class: 'nm' }, r.art),
+        sv('path', { d, fill: cssColor(r.art) }, sv('title', null, `${r.art}: ${r.n} observasjoner, ${r.dyr} dyr`)),
+        sv('text', { x: LBL + w + 7, y: y + BH / 2 + 4.5 }, `${r.n} obs · ${r.dyr} dyr`));
+    });
+
+    // Art × måned: varmekart i én fargetone
+    const HDR = 18, GAP = 2, CH = 24;
+    const cw = (W - LBL) / 12;
+    const maxM = Math.max(...rows.map(r => Math.max(...r.mnd)));
+    const heat = sv('svg', { class: 'chart', viewBox: `0 0 ${W} ${HDR + rows.length * (CH + GAP)}`, role: 'img', 'aria-label': 'Observasjoner per art og måned' });
+    MND1.forEach((m, c) => heat.append(sv('text', { x: LBL + c * cw + cw / 2, y: 12, 'text-anchor': 'middle', class: 'ax' }, m)));
+    rows.forEach((r, i) => {
+      const y = HDR + i * (CH + GAP);
+      heat.append(sv('text', { x: LBL - 10, y: y + CH / 2 + 4.5, 'text-anchor': 'end', class: 'nm' }, r.art));
+      r.mnd.forEach((v, c) => {
+        const op = v ? 0.22 + 0.78 * (v / maxM) : 1;
+        heat.append(sv('rect', { x: LBL + c * cw + GAP / 2, y, width: Math.max(1, cw - GAP), height: CH, rx: 3, fill: v ? 'var(--seq)' : 'var(--empty)', 'fill-opacity': op },
+          sv('title', null, `${r.art}, ${MND[c].replace('.', '')}: ${v} observasjoner`)));
+        if (v) heat.append(sv('text', { x: LBL + c * cw + cw / 2, y: y + CH / 2 + 4, 'text-anchor': 'middle', class: 'in', style: `fill:${op > 0.6 ? 'var(--seq-ink)' : 'var(--ink)'}` }, v));
+      });
+    });
+
+    // Tid på døgnet: 24 timer
+    const hrs = new Array(24).fill(0);
+    list.forEach(o => { hrs[+o.tid.slice(11, 13)]++; });
+    const maxH = Math.max(1, ...hrs);
+    const HL = 26, HR = 4, HT = 16, HB = 22, HH = 120;
+    const slotW = (W - HL - HR) / 24, bw = Math.min(24, slotW - 2);
+    const plotH = HH - HT - HB;
+    const tod = sv('svg', { class: 'chart', viewBox: `0 0 ${W} ${HH}`, role: 'img', 'aria-label': 'Observasjoner per time på døgnet' });
+    tod.append(
+      sv('line', { x1: HL, x2: W - HR, y1: HT, y2: HT, stroke: 'var(--grid)', 'stroke-width': 1 }),
+      sv('text', { x: HL - 6, y: HT + 4, 'text-anchor': 'end', class: 'ax' }, maxH),
+      sv('text', { x: HL - 6, y: HT + plotH + 4, 'text-anchor': 'end', class: 'ax' }, 0));
+    hrs.forEach((v, h) => {
+      const x = HL + h * slotW + (slotW - bw) / 2;
+      if (v) {
+        const hgt = v / maxH * plotH, rr = Math.min(3, bw / 2, hgt);
+        const y0 = HT + plotH;
+        const d = `M${x},${y0} v${-(hgt - rr)} a${rr},${rr} 0 0 1 ${rr},${-rr} h${bw - 2 * rr} a${rr},${rr} 0 0 1 ${rr},${rr} v${hgt - rr} z`;
+        tod.append(sv('path', { d, fill: 'var(--seq)' }, sv('title', null, `Kl. ${pad(h)}–${pad((h + 1) % 24)}: ${v} observasjoner`)));
+      }
+      if (h % 6 === 0) tod.append(sv('text', { x: HL + h * slotW, y: HH - 5, 'text-anchor': 'start', class: 'ax' }, pad(h)));
+    });
+    tod.append(sv('line', { x1: HL, x2: W - HR, y1: HT + plotH + .5, y2: HT + plotH + .5, stroke: 'var(--axis)', 'stroke-width': 1 }));
+
+    const peak = hrs.indexOf(Math.max(...hrs));
+    body.replaceChildren(
+      tiles,
+      el('h3', { text: 'Per art' }), bars,
+      el('h3', { text: 'Art og måned' }), heat,
+      el('h3', { text: 'Tid på døgnet' }), tod,
+      el('p', { class: 'hint', text: `Flest observasjoner mellom kl. ${pad(peak)} og ${pad((peak + 1) % 24)}. Hold markøren over en søyle eller rute for å se tallet.` }));
+  }
+
+  /* ================= Paneler ================= */
+  const PANEL_BTN = { 'p-filter': '#t-filter', 'p-stats': '#t-stats', 'p-list': '#t-list' };
+  function openPanel(id) {
+    if (state.mode !== 'view') return;
+    const same = state.panel === id;
+    closePanels();
+    if (same) return;
+    state.panel = id;
+    document.body.classList.add('has-panel');
+    $('#' + id).hidden = false;
+    if (PANEL_BTN[id]) $(PANEL_BTN[id]).setAttribute('aria-pressed', 'true');
+    if (id === 'p-filter') renderFilter();
+    if (id === 'p-stats') renderStats();
+    if (id === 'p-list') renderList();
+  }
+  function closePanels() {
+    ['p-filter', 'p-stats', 'p-list'].forEach(id => { $('#' + id).hidden = true; });
+    Object.values(PANEL_BTN).forEach(s => $(s).setAttribute('aria-pressed', 'false'));
+    state.panel = null;
+    document.body.classList.remove('has-panel');
+  }
+  $('#t-filter').addEventListener('click', () => openPanel('p-filter'));
+  $('#t-stats').addEventListener('click', () => openPanel('p-stats'));
+  $('#t-list').addEventListener('click', () => openPanel('p-list'));
+  $$('[data-close]').forEach(b => b.addEventListener('click', closePanels));
+  $('#list-fit').addEventListener('click', () => {
+    const pts = filtered().map(o => [o.lat, o.lon]);
+    if (!pts.length) return;
+    if (window.innerWidth < 800) closePanels();
+    map.fitBounds(pts, { padding: [60, 60], maxZoom: 16 });
+  });
+
+  function resetFilter() { state.filter = { skjul: new Set(), periode: 'alt', fra: '', til: '' }; saveFilter(); renderAll(); }
+  $('#flt-reset').addEventListener('click', resetFilter);
+  $('#flt-all').addEventListener('click', () => { state.filter.skjul.clear(); saveFilter(); renderAll(); });
+  $('#flt-none').addEventListener('click', () => { state.obs.forEach(o => state.filter.skjul.add(canon(o.art))); saveFilter(); renderAll(); });
+  $('#flt-fra').addEventListener('change', e => { state.filter.fra = e.target.value; saveFilter(); renderAll(); });
+  $('#flt-til').addEventListener('change', e => { state.filter.til = e.target.value; saveFilter(); renderAll(); });
+
+  async function removeExamples() {
+    state.obs = state.obs.filter(o => !o.eksempel);
+    await Store.replaceAll(state.obs);
+    ui.save({ utenEksempler: true });
+    renderAll();
+    toast('Eksemplene er fjernet');
+  }
+  $('#ex-toggle').addEventListener('click', async () => {
+    if (state.obs.some(o => o.eksempel)) return removeExamples();
+    state.obs = state.obs.concat(makeExamples());
+    await Store.replaceAll(state.obs);
+    ui.save({ utenEksempler: false });
+    renderAll();
+    toast('Eksemplene er lagt inn');
+  });
+
+  /* ================= GPS ================= */
+  $('#sim-toggle').addEventListener('click', () => setSim(!sim.on));
+  $('#sim-reset').addEventListener('click', () => { sim.pos = LINGE_GARD.slice(); ui.save({ simPos: sim.pos }); applySim(true); toast('Flyttet tilbake til gården Linge'); });
+  const gps = { watch: null, pos: null, acc: null, marker: null, circle: null, centerNext: false, waiting: [] };
+  const sim = { on: prefs.sim !== false, pos: Array.isArray(prefs.simPos) ? prefs.simPos : LINGE_GARD.slice() };
+
+  function clearMe() {
+    if (gps.marker) { map.removeLayer(gps.marker); gps.marker = null; }
+    if (gps.circle) { map.removeLayer(gps.circle); gps.circle = null; }
+  }
+  function placeMe(pos, acc, simulated) {
+    clearMe();
+    gps.pos = pos.slice(); gps.acc = acc;
+    gps.circle = L.circle(gps.pos, { radius: acc, color: '#111', weight: 1, opacity: .5, fillColor: '#fff', fillOpacity: .15, interactive: false }).addTo(map);
+    gps.marker = L.marker(gps.pos, {
+      icon: L.divIcon({ html: simulated ? '<i></i><b>SIMULERT</b>' : '<i></i>', className: simulated ? 'me sim' : 'me', iconSize: [30, 30], iconAnchor: [15, 15] }),
+      draggable: simulated, zIndexOffset: 900, keyboard: false, title: simulated ? 'Simulert posisjon. Dra for å flytte.' : 'Min posisjon'
+    }).addTo(map);
+    if (simulated) {
+      gps.marker.on('drag', e => {
+        const ll = e.target.getLatLng();
+        gps.pos = [ll.lat, ll.lng];
+        gps.circle.setLatLng(ll);
+        updateReadout();
+        if (state.draft && !state.draft.fra) showPos();
+      });
+      gps.marker.on('dragend', () => {
+        sim.pos = gps.pos.slice();
+        ui.save({ simPos: sim.pos });
+        toast('Den simulerte posisjonen er flyttet');
+      });
+    }
+  }
+  function applySim(center) {
+    if (gps.watch != null) { navigator.geolocation.clearWatch(gps.watch); gps.watch = null; }
+    placeMe(sim.pos, 5, true);
+    setGpsState('on');
+    if (center) map.flyTo(gps.pos, Math.max(map.getZoom(), 15), { duration: 0.6 });
+    gps.waiting.splice(0).forEach(w => w.res(gps.pos));
+    updateReadout();
+  }
+  function setSim(on) {
+    sim.on = on;
+    ui.save({ sim: on });
+    if (on) { applySim(true); toast('Du er nå simulert på gården Linge'); }
+    else { clearMe(); gps.pos = null; setGpsState('off'); toast('Simulert posisjon er slått av'); }
+    renderStatus();
+    if (state.panel === 'p-filter') renderFilter();
+  }
+  function setGpsState(s) {
+    const b = $('#t-gps');
+    b.dataset.state = s;
+    b.setAttribute('aria-label', s === 'on' ? 'Sentrer på min posisjon' : 'Vis min posisjon');
+  }
+  function startGps(center) {
+    if (sim.on) return applySim(center);
+    if (!('geolocation' in navigator)) { toast('Nettleseren gir ikke tilgang til posisjon.', true); return; }
+    if (center) gps.centerNext = true;
+    if (gps.watch == null) {
+      setGpsState('searching');
+      gps.watch = navigator.geolocation.watchPosition(onPos, onPosErr, { enableHighAccuracy: true, maximumAge: 5000, timeout: 25000 });
+    } else if (center && gps.pos) {
+      gps.centerNext = false;
+      map.flyTo(gps.pos, Math.max(map.getZoom(), 15), { duration: 0.6 });
+    }
+  }
+  function onPos(p) {
+    if (sim.on) return;
+    gps.pos = [p.coords.latitude, p.coords.longitude];
+    gps.acc = p.coords.accuracy;
+    if (!gps.marker) {
+      placeMe(gps.pos, gps.acc, false);
+    } else {
+      gps.marker.setLatLng(gps.pos);
+      gps.circle.setLatLng(gps.pos).setRadius(gps.acc);
+    }
+    setGpsState('on');
+    if (gps.centerNext) { gps.centerNext = false; map.flyTo(gps.pos, Math.max(map.getZoom(), 15), { duration: 0.6 }); }
+    gps.waiting.splice(0).forEach(w => w.res(gps.pos));
+    updateReadout();
+    if (state.draft && !state.draft.fra) showPos();
+  }
+  function onPosErr(err) {
+    const msgs = {
+      1: 'Fikk ikke tilgang til posisjonen. Tillat posisjon for denne siden i nettleseren.',
+      2: 'Fant ikke posisjonen. Prøv igjen med fri sikt til himmelen.',
+      3: 'Det tok for lang tid å finne posisjonen. Prøv igjen.'
+    };
+    if (!gps.pos) setGpsState('off');
+    if (err.code === 1 && gps.watch != null) { navigator.geolocation.clearWatch(gps.watch); gps.watch = null; }
+    if (!gps.pos || err.code === 1) toast(msgs[err.code] || 'Posisjonen er ikke tilgjengelig.', true);
+    gps.waiting.splice(0).forEach(w => w.rej(err));
+  }
+  function whenGps() {
+    return new Promise((res, rej) => {
+      if (gps.pos) return res(gps.pos);
+      gps.waiting.push({ res, rej });
+      startGps(false);
+    });
+  }
+  $('#t-gps').addEventListener('click', () => startGps(true));
+
+  function updateReadout() {
+    if (document.documentElement.dataset.style !== 'b') return;
+    const c = map.getCenter(), u = toUTM33(c.lat, c.lng);
+    const parts = [el('span', { text: `N ${grp(u.n)}  Ø ${grp(u.e)}` }), el('span', { class: 'z', text: `z${map.getZoom()}` })];
+    if (gps.pos) parts.push(el('span', { class: 'z', text: sim.on ? 'GPS simulert' : `GPS ±${Math.round(gps.acc)} m` }));
+    $('#readout').replaceChildren(...parts);
+  }
+  map.on('move', updateReadout);
+
+  /* ================= Værdata (MET Nordic via Open-Meteo) ================= */
+  const wxCache = new Map();
+  function codeToVaer(c) {
+    if (c == null) return null;
+    c = Number(c);
+    if (c <= 1) return 'Sol / klart';
+    if (c <= 3) return 'Skyet';
+    if (c === 45 || c === 48) return 'Tåke';
+    if ((c >= 71 && c <= 77) || c === 85 || c === 86) return 'Snøvær';
+    if (c >= 51) return 'Regn';
+    return 'Skyet';
+  }
+  function dirToVind(dir, speed) {
+    if (speed != null && speed < 0.5) return 'Stille';
+    if (dir == null) return null;
+    return DIRS[Math.round((((Number(dir) % 360) + 360) % 360) / 45) % 8];
+  }
+  async function fetchHour(url, hourStr, source) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 12000);
+    try {
+      const r = await fetch(url, { signal: ctl.signal });
+      if (!r.ok) return null;
+      const h = (await r.json()).hourly;
+      if (!h || !h.time) return null;
+      const i = h.time.indexOf(hourStr);
+      if (i < 0) return null;
+      const code = h.weather_code ? h.weather_code[i] : null, temp = h.temperature_2m ? h.temperature_2m[i] : null;
+      const speed = h.wind_speed_10m ? h.wind_speed_10m[i] : null, dir = h.wind_direction_10m ? h.wind_direction_10m[i] : null;
+      if (code == null && dir == null) return null;
+      const vaer = codeToVaer(code), vind = dirToVind(dir, speed);
+      const parts = [];
+      if (temp != null) parts.push(num1(temp) + ' °C');
+      if (speed != null) parts.push(num1(speed) + ' m/s' + (dir != null && vind !== 'Stille' ? ' fra ' + Math.round(dir) + '°' : ''));
+      if (vaer) parts.push(vaer.toLowerCase());
+      return { ok: true, vaer, vind, summary: `${source} kl. ${hourStr.slice(11, 16)}: ${parts.join(', ')}` };
+    } catch (e) { return null; } finally { clearTimeout(timer); }
+  }
+  const hasServer = () => !!(window.google && google.script && google.script.run);
+  function serverWeather(lat, lon, tid) {
+    return new Promise(res => {
+      google.script.run.withSuccessHandler(res).withFailureHandler(() => res(null)).getWeather(lat, lon, tid);
+    });
+  }
+  async function getWeather(lat, lon, tid) {
+    if (hasServer()) {
+      const key = ['srv', lat.toFixed(3), lon.toFixed(3), tid.slice(0, 13)].join('|');
+      if (wxCache.has(key)) return wxCache.get(key);
+      const r = await serverWeather(lat, lon, tid);
+      if (r && r.ok) { wxCache.set(key, r); return r; }
+      if (r && !r.ok) return r;
+    }
+    const t = osloEpoch(tid);
+    if (!isFinite(t)) return { ok: false, message: 'Ugyldig tidspunkt.' };
+    const rounded = Math.round(t / 3600e3) * 3600e3;
+    const hourStr = osloStr(rounded).slice(0, 13) + ':00', day = hourStr.slice(0, 10);
+    const key = [lat.toFixed(3), lon.toFixed(3), hourStr].join('|');
+    if (wxCache.has(key)) return wxCache.get(key);
+    const age = (Date.now() - rounded) / 864e5;
+    const common = `latitude=${lat.toFixed(5)}&longitude=${lon.toFixed(5)}&hourly=temperature_2m,weather_code,wind_speed_10m,wind_direction_10m&timezone=Europe%2FOslo&wind_speed_unit=ms`;
+    let res = null;
+    if (age <= 90 && age >= -2.2) res = await fetchHour(`https://api.open-meteo.com/v1/forecast?${common}&models=metno_seamless&start_hour=${hourStr}&end_hour=${hourStr}`, hourStr, age > 0 ? 'MET Nordic' : 'MET Nordic, prognose');
+    if (!res && age > 5) res = await fetchHour(`https://archive-api.open-meteo.com/v1/archive?${common}&start_date=${day}&end_date=${day}`, hourStr, 'ERA5-reanalyse');
+    if (!res) return { ok: false, message: age < -2.2 ? 'Det finnes ikke værdata så langt fram i tid.' : 'Fant ikke værdata. Sjekk nettforbindelsen, eller fyll inn selv.' };
+    wxCache.set(key, res);
+    return res;
+  }
+
+  /* ================= Skjema ================= */
+  function chipGroup(box, list, field, onPick) {
+    box.replaceChildren(...list.map(v => el('button', {
+      type: 'button', class: 'chip', 'data-v': v, 'aria-pressed': 'false',
+      onclick: () => { setSel(field, selection[field] === v ? '' : v); if (onPick) onPick(); }
+    }, v)));
+  }
+  function arrowSvg(d) {
+    return sv('svg', { viewBox: '-10 -10 20 20', 'aria-hidden': 'true' },
+      sv('path', { d: 'M0,-8 L6,1 L1.8,1 L1.8,8 L-1.8,8 L-1.8,1 L-6,1 Z', transform: `rotate(${d})` }));
+  }
+  function roseGroup(box, field, mid, arrows, onPick) {
+    box.replaceChildren(...ROSE.map(v => {
+      const val = v === '*' ? mid[0] : v;
+      const label = v === '*' ? mid[1] : (arrows ? 'mot ' + v : 'fra ' + v);
+      const b = el('button', { type: 'button', 'data-v': val, 'aria-pressed': 'false', 'aria-label': label, class: v === '*' ? 'mid' : null,
+        onclick: () => { setSel(field, selection[field] === val ? '' : val); if (onPick) onPick(); } },
+        v === '*' ? mid[1] : (arrows ? arrowSvg(dirDeg(v)) : v));
+      return b;
+    }));
+  }
+  function setSel(field, v) {
+    selection[field] = v || '';
+    const box = $('#f-' + field);
+    box.querySelectorAll('[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === selection[field])));
+  }
+  chipGroup($('#f-vaer'), VAER, 'vaer', () => { state.touched.vaer = true; $('#auto-vaer').hidden = true; });
+  chipGroup($('#f-sno'), SNO, 'sno');
+  roseGroup($('#f-vind'), 'vind', ['Stille', 'Stille'], false, () => { state.touched.vind = true; $('#auto-vind').hidden = true; });
+  roseGroup($('#f-gikk'), 'gikk', ['Ro', 'Sto i ro'], true);
+  $('#arter').replaceChildren(...SPECIES.map(s => s[0]).concat(EXTRA).map(a => el('option', { value: a })));
+  $('#f-artchips').replaceChildren(...SPECIES.map(([a]) => el('button', {
+    type: 'button', class: 'chip', 'data-v': a, 'aria-pressed': 'false',
+    onclick: () => { $('#f-art').value = a; syncArt(); }
+  }, el('span', { class: 'sw', style: `background:${cssColor(a)}` }), a)));
+  function syncArt() {
+    const a = $('#f-art').value.trim();
+    $('#f-sw').style.background = a ? cssColor(a) : 'var(--line-soft)';
+    $$('#f-artchips .chip').forEach(c => c.setAttribute('aria-pressed', String(slot(a) >= 0 && c.dataset.v === canon(a))));
+  }
+  $('#f-art').addEventListener('input', syncArt);
+
+  function setMode(m) {
+    state.mode = m;
+    document.body.classList.toggle('placing', m === 'place');
+    $('#banner').hidden = m !== 'place';
+    $('#t-new').hidden = m !== 'view';
+  }
+  $('#t-new').addEventListener('click', () => { closePanels(); map.closePopup(); setMode('place'); });
+  $('#pl-cancel').addEventListener('click', () => setMode('view'));
+  map.on('click', e => { if (state.mode === 'place') openForm({ lat: e.latlng.lat, lon: e.latlng.lng }); });
+
+  $('#pl-here').addEventListener('click', async () => {
+    const b = $('#pl-here'); b.disabled = true; b.textContent = 'Finner posisjon …';
+    try { const p = await whenGps(); openForm({ lat: p[0], lon: p[1] }); }
+    catch (e) { /* melding vises fra onPosErr */ }
+    finally { b.disabled = false; b.textContent = 'Der jeg står'; }
+  });
+  $('#pl-peil').addEventListener('click', async () => {
+    const b = $('#pl-peil'); b.disabled = true; b.textContent = 'Finner posisjon …';
+    try {
+      const p = await whenGps();
+      const c = map.getCenter();
+      let { brg, dist } = brgDist(p[0], p[1], c.lat, c.lng);
+      if (dist < 50 || dist > 3000) { brg = 0; dist = 200; }
+      brg = Math.round(brg); dist = Math.round(dist / 10) * 10;
+      const t = dest(p[0], p[1], brg, dist);
+      openForm({ lat: t[0], lon: t[1], fra: { lat: p[0], lon: p[1], retning: brg, avstand: dist } });
+    } catch (e) { /* melding vises fra onPosErr */ }
+    finally { b.disabled = false; b.textContent = 'Retning og avstand fra meg'; }
+  });
+
+  function showPos() {
+    const d = state.draft;
+    if (!d) return;
+    const u = toUTM33(d.lat, d.lon);
+    const parts = [el('span', { text: `N ${grp(u.n)}  Ø ${grp(u.e)}` }), el('span', { text: `${deg(d.lat, 5)}° N ${deg(d.lon, 5)}° Ø` })];
+    if (!d.fra && gps.pos) {
+      const bd = brgDist(gps.pos[0], gps.pos[1], d.lat, d.lon);
+      parts.push(el('span', { text: bd.dist < 5 ? 'Der du står' : `${fmtDist(bd.dist)} fra deg, peiling ${Math.round(bd.brg)}°` }));
+    }
+    $('#f-pos').replaceChildren(...parts);
+  }
+  function drawDraftLine() {
+    const d = state.draft;
+    if (!state.draftLine) state.draftLine = L.layerGroup().addTo(map);
+    sightLine(state.draftLine, d && d.fra ? Object.assign({ to: [d.lat, d.lon] }, d.fra) : null);
+  }
+  function setWx(st, text) { $('#wx').dataset.state = st; $('#wx-text').textContent = text; }
+
+  function openForm(o) {
+    const isNew = !o.id;
+    closePanels();
+    map.closePopup();
+    setMode('edit');
+    state.draft = { id: o.id || null, lat: o.lat, lon: o.lon, fra: o.fra ? Object.assign({}, o.fra) : null, vaerdata: o.vaerdata || '', eksempel: !!o.eksempel, registrert: o.registrert || null };
+    state.touched = { vaer: !isNew, vind: !isNew };
+    $('#form-title').textContent = isNew ? 'Ny observasjon' : 'Rediger observasjon';
+    $('#f-art').value = o.art || '';
+    syncArt();
+    $('#f-antall').value = o.antall || 1;
+    $('#f-tid').value = o.tid || osloNow();
+    setSel('vaer', o.vaer); setSel('vind', o.vind); setSel('gikk', o.gikk); setSel('sno', o.sno);
+    $('#auto-vaer').hidden = true; $('#auto-vind').hidden = true;
+    $('#f-err').hidden = true;
+    $('#f-peil').hidden = !state.draft.fra;
+    $('#f-drag').hidden = !!state.draft.fra;
+    if (state.draft.fra) { $('#f-brg').value = Math.round(state.draft.fra.retning); $('#f-dist').value = Math.round(state.draft.fra.avstand); }
+
+    if (!isNew) { state.hiddenId = o.id; renderMarkers(); }
+    if (state.draftMarker) map.removeLayer(state.draftMarker);
+    state.draftMarker = L.marker([o.lat, o.lon], { icon: markerIcon(o, true), draggable: true, autoPan: true, zIndexOffset: 1000 }).addTo(map);
+    state.draftMarker.on('drag', ev => {
+      const ll = ev.target.getLatLng();
+      state.draft.lat = ll.lat; state.draft.lon = ll.lng;
+      if (state.draft.fra) {
+        const bd = brgDist(state.draft.fra.lat, state.draft.fra.lon, ll.lat, ll.lng);
+        state.draft.fra.retning = bd.brg; state.draft.fra.avstand = bd.dist;
+        $('#f-brg').value = Math.round(bd.brg); $('#f-dist').value = Math.round(bd.dist);
+      }
+      drawDraftLine(); showPos();
+    });
+    state.draftMarker.on('dragend', () => scheduleWeather());
+    drawDraftLine();
+    showPos();
+    $('#p-form').hidden = false;
+    $('#p-form').scrollTop = 0;
+
+    const pts = state.draft.fra ? [[state.draft.fra.lat, state.draft.fra.lon], [o.lat, o.lon]] : [[o.lat, o.lon]];
+    if (window.innerWidth < 800) {
+      const target = [o.lat, o.lon];
+      const pt = map.latLngToContainerPoint(target);
+      map.panBy([0, pt.y - window.innerHeight * 0.22], { animate: true });
+    } else if (pts.length > 1) {
+      map.fitBounds(pts, { paddingTopLeft: [60, 80], paddingBottomRight: [460, 80], maxZoom: 16 });
+    }
+
+    if (isNew) fetchWeather();
+    else setWx(o.vaerdata ? 'ok' : 'error', o.vaerdata || 'Ingen lagrede værdata. Trykk «Hent på nytt».');
+  }
+
+  function closeForm() {
+    if (state.draftMarker) { map.removeLayer(state.draftMarker); state.draftMarker = null; }
+    if (state.draftLine) state.draftLine.clearLayers();
+    state.draft = null;
+    state.wxSeq++;
+    const had = state.hiddenId;
+    state.hiddenId = null;
+    $('#p-form').hidden = true;
+    setMode('view');
+    if (had) renderMarkers();
+  }
+  $('#f-close').addEventListener('click', closeForm);
+
+  function onPeilInput() {
+    const d = state.draft;
+    if (!d || !d.fra) return;
+    const brg = ((Number($('#f-brg').value) % 360) + 360) % 360;
+    const dist = Math.max(1, Number($('#f-dist').value) || 0);
+    if (!isFinite(brg) || !isFinite(dist)) return;
+    d.fra.retning = brg; d.fra.avstand = dist;
+    const t = dest(d.fra.lat, d.fra.lon, brg, dist);
+    d.lat = t[0]; d.lon = t[1];
+    state.draftMarker.setLatLng(t);
+    drawDraftLine(); showPos(); scheduleWeather();
+  }
+  $('#f-brg').addEventListener('input', onPeilInput);
+  $('#f-dist').addEventListener('input', onPeilInput);
+
+  let wxTimer = null;
+  function scheduleWeather() { clearTimeout(wxTimer); wxTimer = setTimeout(fetchWeather, 700); }
+  async function fetchWeather() {
+    const d = state.draft, tid = $('#f-tid').value;
+    if (!d || !tid) return;
+    const seq = ++state.wxSeq;
+    setWx('loading', 'Henter værdata fra MET …');
+    const w = await getWeather(d.lat, d.lon, tid);
+    if (seq !== state.wxSeq || !state.draft) return;
+    if (!w.ok) { d.vaerdata = ''; setWx('error', w.message); return; }
+    if (!state.touched.vaer && w.vaer) { setSel('vaer', w.vaer); $('#auto-vaer').hidden = false; }
+    if (!state.touched.vind && w.vind) { setSel('vind', w.vind); $('#auto-vind').hidden = false; }
+    d.vaerdata = w.summary;
+    setWx('ok', w.summary);
+  }
+  $('#f-tid').addEventListener('change', scheduleWeather);
+  $('#wx-refresh').addEventListener('click', () => { state.touched = { vaer: false, vind: false }; fetchWeather(); });
+
+  $('#obs-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = state.draft;
+    if (!d) return;
+    const art = canon($('#f-art').value);
+    const antall = parseInt($('#f-antall').value, 10);
+    const tid = $('#f-tid').value;
+    const errEl = $('#f-err');
+    const fail = (t, f) => { errEl.textContent = t; errEl.hidden = false; if (f) f.focus(); };
+    if (!art) return fail('Velg eller skriv inn art.', $('#f-art'));
+    if (!(antall >= 1 && antall <= 999)) return fail('Antall må være mellom 1 og 999.', $('#f-antall'));
+    if (!tid) return fail('Velg dato og klokkeslett.', $('#f-tid'));
+    errEl.hidden = true;
+    const o = {
+      id: d.id || uid(), eksempel: d.eksempel, registrert: d.registrert || new Date().toISOString(),
+      tid, art, antall, gikk: selection.gikk, vaer: selection.vaer, vind: selection.vind, sno: selection.sno,
+      lat: Math.round(d.lat * 1e6) / 1e6, lon: Math.round(d.lon * 1e6) / 1e6,
+      fra: d.fra ? { lat: Math.round(d.fra.lat * 1e6) / 1e6, lon: Math.round(d.fra.lon * 1e6) / 1e6, retning: Math.round(d.fra.retning), avstand: Math.round(d.fra.avstand) } : null,
+      vaerdata: d.vaerdata || ''
+    };
+    await Store.save(o);
+    const i = state.obs.findIndex(x => x.id === o.id);
+    if (i >= 0) state.obs[i] = o; else state.obs.push(o);
+    if (state.filter.skjul.has(art)) { state.filter.skjul.delete(art); saveFilter(); }
+    closeForm();
+    renderAll();
+    toast(storageOk ? 'Observasjonen er lagret i denne nettleseren' : 'Lagret midlertidig. Nettleseren tillater ikke lagring, så den forsvinner når siden lukkes.', !storageOk);
+    const m = markers.get(o.id);
+    if (m) m.openPopup();
+    else toast('Lagret, men skjult av periodefilteret', false);
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (state.mode === 'place') setMode('view');
+    else if (state.mode === 'edit') closeForm();
+    else closePanels();
+  });
+  let rsTimer = null;
+  window.addEventListener('resize', () => { clearTimeout(rsTimer); rsTimer = setTimeout(() => { if (state.panel === 'p-stats') renderStats(); }, 150); });
+
+  /* ================= Start ================= */
+  (async function start() {
+    const h = (location.hash || '').replace('#', '');
+    setStyle(['a', 'b', 'c'].includes(h) ? h : (prefs.stil || 'a'));
+    setMode('view');
+    let data = readAll();
+    if (data == null && !prefs.utenEksempler) { data = makeExamples(); writeAll(data); }
+    state.obs = Array.isArray(data) ? data : [];
+    if (sim.on) applySim(false);
+    renderAll();
+    if (!storageOk) toast('Nettleseren tillater ikke lagring. Observasjoner forsvinner når siden lukkes.', true);
+  })();
+})();
+</script>
+</body>
+</html>
