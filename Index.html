@@ -335,8 +335,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
   }
 
   function nibUrl(o) {
-    const u = toUTM33(o.lat, o.lon);
-    return `https://norgeibilder.no/?x=${Math.round(u.e)}&y=${Math.round(u.n)}&level=17&utm=33`;
+    const u = toUTM33(o.lat, o.lon), r = 250;   // utsnitt på 500 × 500 m rundt observasjonen
+    return `https://norgeibilder.no/?wkid=25833&is3d=false&xmin=${Math.round(u.e - r)}&xmax=${Math.round(u.e + r)}&ymin=${Math.round(u.n - r)}&ymax=${Math.round(u.n + r)}`;
   }
   function coordText(o) {
     const u = toUTM33(o.lat, o.lon);
