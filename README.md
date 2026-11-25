@@ -20,6 +20,7 @@ Delt kart for å registrere hvor det er observert vilt ved Linge i Valldal (Fjor
 - Design «Kartblad» med trådkors i midten og koordinatlinje i UTM 33.
 - Nye observasjoner plasseres bare med krysset: flytt kartet og trykk «Legg til ved krysset». Trykk i kartet flytter krysset dit.
 - Hjort registreres med antall bukk, kolle, kalv og ungdyr. Rådyr registreres med totalt antall.
+- Egne stedsnavn: trykk «+ Navn» og lagre et navn ved krysset. Navnene kan endres, flyttes med krysset og slettes, og skjules under kartlag.
 - Min posisjon (GPS), med testmodus som simulerer at du står på gården Linge. Punktet kan dras.
 - Filter per art og periode, og retningen dyret gikk vist som pil på markøren.
 - Statistikk: hjort etter kategori med kalv per kolle og kolle per bukk, observasjoner per måned og per time på døgnet.

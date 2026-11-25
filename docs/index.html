@@ -161,6 +161,14 @@ input[type=number]{font-variant-numeric:tabular-nums}
 .counts .total b{color:var(--ink);font-variant-numeric:tabular-nums}
 .banner .go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
 .editing .crosshair,.popup-open .crosshair{display:none!important}
+[data-style="b"] .naming .crosshair{width:48px;height:48px;margin:-24px 0 0 -24px}
+.naming .crosshair::after{content:"";position:absolute;inset:13px;border:2px solid #fff;border-radius:50%}
+.namebtn{display:flex;align-items:center;gap:6px;height:44px;padding:0 12px;background:var(--surface);color:var(--ink);border:1.5px solid var(--rule);font:600 13px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.namebtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.stedmk{background:none;border:0}
+.sted{position:absolute;left:0;top:50%;transform:translate(-1px,-50%);display:flex;align-items:center;gap:6px;white-space:nowrap;font:600 13.5px/1.1 var(--display);letter-spacing:.05em;color:#111;text-shadow:0 0 2px #fff,0 0 2px #fff,0 0 3px #fff,0 0 5px #fff;cursor:pointer}
+.sted i{width:8px;height:8px;flex:none;background:#fff;border:2px solid #111;transform:rotate(45deg);box-shadow:0 0 0 1.5px #fff}
+#p-sted .pos{margin:0}
 .placing .crosshair::after{content:"";position:absolute;inset:13px;border:2px solid #fff;border-radius:50%}
 
 /* Liste */
@@ -268,7 +276,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
 [data-style="b"] .readout .z{color:var(--ink-2)}
 [data-style="b"] .crosshair{display:block;position:fixed;z-index:500;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;background:linear-gradient(#fff,#fff) center/1.5px 100% no-repeat,linear-gradient(#fff,#fff) center/100% 1.5px no-repeat;mix-blend-mode:difference}
 [data-style="b"] .placing .crosshair{width:48px;height:48px;margin:-24px 0 0 -24px}
-[data-style="b"] .status{top:calc(var(--top) + 10px + env(safe-area-inset-top,0px));left:max(12px, env(safe-area-inset-left,0px));right:70px}
+[data-style="b"] .status{top:calc(var(--top) + 10px + env(safe-area-inset-top,0px));left:max(12px, env(safe-area-inset-left,0px));right:130px}
 [data-style="b"] .pill{border-radius:0;box-shadow:none;border:1.5px solid var(--rule)}
 [data-style="b"] .pill button{border-radius:0}
 [data-style="b"] .panel{box-shadow:none;border-top:1.5px solid var(--rule)}
@@ -361,6 +369,21 @@ input[type=number]{font-variant-numeric:tabular-nums}
     <div><button class="chip" type="button" id="f-move">Endre posisjon med krysset</button></div>
     <p class="err" id="f-err" hidden></p>
     <button class="save" type="submit" id="f-save">Lagre observasjon</button>
+  </form>
+</section>
+
+<!-- Eget stedsnavn -->
+<section class="panel" id="p-sted" hidden aria-labelledby="sted-title">
+  <div class="panel-head">
+    <h2 id="sted-title">Nytt stedsnavn</h2>
+    <div class="links"><button class="link" type="button" id="sted-cancel">Avbryt</button></div>
+  </div>
+  <form id="sted-form" novalidate>
+    <div class="f"><label for="sted-navn">Navn</label><input id="sted-navn" maxlength="40" autocomplete="off" enterkeyhint="done"></div>
+    <p class="pos" id="sted-pos"></p>
+    <p class="hint" id="sted-hint">Flytt kartet til krysset står der navnet skal ligge.</p>
+    <p class="err" id="sted-err" hidden></p>
+    <button class="save" type="submit">Lagre stedsnavn</button>
   </form>
 </section>
 
@@ -715,14 +738,32 @@ input[type=number]{font-variant-numeric:tabular-nums}
   }
   base[currentBase].addTo(map);
   if (prefs.overlay) overlays[OVL].addTo(map);
+  const STEDER = 'Egne stedsnavn';
+  const stedLayer = L.layerGroup();
+  overlays[STEDER] = stedLayer;
+  if (prefs.stedVis !== false) stedLayer.addTo(map);
   L.control.layers(base, overlays, { position: 'topright', collapsed: true }).addTo(map);
+  const NameCtl = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd() {
+      const b = L.DomUtil.create('button', 'namebtn');
+      b.type = 'button';
+      b.title = 'Legg til stedsnavn ved krysset';
+      b.setAttribute('aria-label', 'Legg til stedsnavn ved krysset');
+      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Navn</span>';
+      L.DomEvent.disableClickPropagation(b);
+      L.DomEvent.on(b, 'click', () => openSted(null));
+      return b;
+    }
+  });
+  new NameCtl().addTo(map);
   map.on('baselayerchange', e => {
     currentBase = e.name;
     health[e.name] = { ok: 0, err: 0, failed: false };
     ui.save({ lag: e.name });
   });
-  map.on('overlayadd', () => ui.save({ overlay: true }));
-  map.on('overlayremove', () => ui.save({ overlay: false }));
+  map.on('overlayadd', e => ui.save(e.name === STEDER ? { stedVis: true } : { overlay: true }));
+  map.on('overlayremove', e => ui.save(e.name === STEDER ? { stedVis: false } : { overlay: false }));
 
   const markerLayer = L.layerGroup().addTo(map);
   const sightLayer = L.layerGroup().addTo(map);
@@ -836,7 +877,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
       if (o.id === state.hiddenId || !isFinite(o.lat) || !isFinite(o.lon)) return;
       const m = L.marker([o.lat, o.lon], { icon: markerIcon(o), title: `${o.art}, ${fmtTid(o.tid)}`, riseOnHover: true })
         .bindPopup(() => popupEl(o), { maxWidth: 300, autoPanPaddingTopLeft: [10, 150], autoPanPaddingBottomRight: [10, 110] });
-      m.on('click', e => { if (state.mode === 'place' || state.mode === 'move') { m.closePopup(); map.panTo(e.latlng); } });
+      m.on('click', e => { if (isPlacing()) { m.closePopup(); map.panTo(e.latlng); } });
       m.on('popupopen', () => { if (o.fra) sightLine(sightLayer, Object.assign({ to: [o.lat, o.lon] }, o.fra)); });
       m.on('popupclose', () => sightLayer.clearLayers());
       m.addTo(markerLayer);
@@ -1031,6 +1072,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     if (id === 'p-list') renderList();
   }
   function closePanels() {
+    if (!$('#p-sted').hidden) closeSted();
     ['p-filter', 'p-stats', 'p-list'].forEach(id => { $('#' + id).hidden = true; });
     Object.values(PANEL_BTN).forEach(s => $(s).setAttribute('aria-pressed', 'false'));
     state.panel = null;
@@ -1303,24 +1345,138 @@ input[type=number]{font-variant-numeric:tabular-nums}
 
   function setMode(m) {
     state.mode = m;
-    const placing = m === 'place' || m === 'move';
+    const placing = m === 'place' || m === 'move' || m === 'stedmove';
     document.body.classList.toggle('placing', placing);
     document.body.classList.toggle('editing', m === 'edit');
     $('#banner').hidden = !placing;
     $('#t-new').hidden = m !== 'view';
-    $('#banner-text').textContent = m === 'move' ? 'Flytt kartet så krysset står på den nye posisjonen' : 'Flytt kartet så krysset står der dyret ble sett';
-    $('#pl-cross').textContent = m === 'move' ? 'Bruk denne posisjonen' : 'Legg til ved krysset';
+    $('#banner-text').textContent = m === 'stedmove' ? `Flytt kartet så krysset står der «${state.stedMove ? state.stedMove.navn : ''}» skal ligge`
+      : m === 'move' ? 'Flytt kartet så krysset står på den nye posisjonen' : 'Flytt kartet så krysset står der dyret ble sett';
+    $('#pl-cross').textContent = m === 'place' ? 'Legg til ved krysset' : 'Bruk denne posisjonen';
     if (placing) updateReadout();
   }
   $('#t-new').addEventListener('click', () => { closePanels(); map.closePopup(); setMode('place'); });
-  $('#pl-cancel').addEventListener('click', () => { if (state.mode === 'move') endMove(false); else setMode('view'); });
+  function isPlacing() { return state.mode === 'place' || state.mode === 'move' || state.mode === 'stedmove'; }
+  $('#pl-cancel').addEventListener('click', () => {
+    if (state.mode === 'move') endMove(false);
+    else { state.stedMove = null; setMode('view'); }
+  });
   $('#pl-cross').addEventListener('click', () => {
     const c = map.getCenter();
     if (state.mode === 'move') endMove(true, c);
+    else if (state.mode === 'stedmove') endStedMove(c);
     else openForm({ lat: c.lat, lon: c.lng });
   });
+
+  /* ================= Egne stedsnavn ================= */
+  const KEY_STEDER = 'viltobs-linge-steder-v1';
+  let stederMem = [];
+  const Steder = {
+    list() { try { const v = localStorage.getItem(KEY_STEDER); return v ? JSON.parse(v) : []; } catch (e) { return stederMem; } },
+    saveAll(arr) { stederMem = arr; try { localStorage.setItem(KEY_STEDER, JSON.stringify(arr)); } catch (e) { storageOk = false; } }
+  };
+  state.steder = Steder.list();
+
+  function renderSteder() {
+    stedLayer.clearLayers();
+    state.steder.forEach(st => {
+      const label = el('span', { class: 'sted' }, el('i'), st.navn);
+      const m = L.marker([st.lat, st.lon], {
+        icon: L.divIcon({ html: label, className: 'stedmk', iconSize: [8, 8], iconAnchor: [4, 4], popupAnchor: [0, -8] }),
+        zIndexOffset: -200, title: st.navn
+      }).bindPopup(() => stedPopup(st), { maxWidth: 280, autoPanPaddingTopLeft: [10, 150], autoPanPaddingBottomRight: [10, 110] });
+      m.on('click', e => { if (isPlacing()) { m.closePopup(); map.panTo(e.latlng); } });
+      stedLayer.addLayer(m);
+    });
+  }
+  function stedPopup(st) {
+    const del = el('button', { type: 'button', class: 'danger', text: 'Slett' });
+    let armTimer = null;
+    del.addEventListener('click', () => {
+      if (!del.classList.contains('armed')) {
+        del.classList.add('armed'); del.textContent = 'Trykk igjen for å slette';
+        armTimer = setTimeout(() => { del.classList.remove('armed'); del.textContent = 'Slett'; }, 4000);
+        return;
+      }
+      clearTimeout(armTimer);
+      state.steder = state.steder.filter(x => x.id !== st.id);
+      Steder.saveAll(state.steder);
+      map.closePopup();
+      renderSteder();
+      toast(`«${st.navn}» er slettet`);
+    });
+    return el('div', { class: 'pp' },
+      el('h4', null, st.navn),
+      el('p', { class: 'when', text: 'Eget stedsnavn' }),
+      el('p', { class: 'coords', text: coordText(st.lat, st.lon) }),
+      el('div', { class: 'btns' },
+        el('button', { type: 'button', text: 'Endre navn', onclick: () => { map.closePopup(); openSted(st); } }),
+        el('button', { type: 'button', text: 'Flytt med krysset', onclick: () => { map.closePopup(); startStedMove(st); } }),
+        del));
+  }
+  function openSted(st) {
+    if (state.mode !== 'view') return;
+    closePanels();
+    map.closePopup();
+    state.stedEdit = st ? st.id : null;
+    $('#sted-title').textContent = st ? 'Endre stedsnavn' : 'Nytt stedsnavn';
+    $('#sted-navn').value = st ? st.navn : '';
+    $('#sted-err').hidden = true;
+    $('#sted-hint').hidden = !!st;
+    $('#p-sted').hidden = false;
+    document.body.classList.toggle('naming', !st);
+    updateStedPos();
+    setTimeout(() => { try { $('#sted-navn').focus(); } catch (e) { /* ignorer */ } }, 60);
+  }
+  function closeSted() {
+    $('#p-sted').hidden = true;
+    document.body.classList.remove('naming');
+    state.stedEdit = null;
+  }
+  function updateStedPos() {
+    if ($('#p-sted').hidden) return;
+    let lat, lon;
+    const st = state.stedEdit && state.steder.find(x => x.id === state.stedEdit);
+    if (st) { lat = st.lat; lon = st.lon; } else { const c = map.getCenter(); lat = c.lat; lon = c.lng; }
+    const u = toUTM33(lat, lon);
+    $('#sted-pos').textContent = `${st ? '' : 'Ved krysset: '}N ${grp(u.n)}  Ø ${grp(u.e)}`;
+  }
+  map.on('move', updateStedPos);
+  $('#sted-cancel').addEventListener('click', closeSted);
+  $('#sted-form').addEventListener('submit', e => {
+    e.preventDefault();
+    const navn = $('#sted-navn').value.trim().replace(/\s+/g, ' ');
+    if (!navn) { $('#sted-err').textContent = 'Skriv inn et navn.'; $('#sted-err').hidden = false; $('#sted-navn').focus(); return; }
+    const st = state.stedEdit && state.steder.find(x => x.id === state.stedEdit);
+    if (st) st.navn = navn;
+    else {
+      const c = map.getCenter();
+      state.steder.push({ id: uid(), navn, lat: Math.round(c.lat * 1e6) / 1e6, lon: Math.round(c.lng * 1e6) / 1e6, registrert: new Date().toISOString() });
+    }
+    Steder.saveAll(state.steder);
+    closeSted();
+    if (!map.hasLayer(stedLayer)) stedLayer.addTo(map);
+    renderSteder();
+    toast(`«${navn}» er lagret`);
+  });
+  function startStedMove(st) {
+    state.stedMove = st;
+    map.setView([st.lat, st.lon], Math.max(map.getZoom(), 15));
+    setMode('stedmove');
+  }
+  function endStedMove(c) {
+    const st = state.stedMove;
+    state.stedMove = null;
+    if (st) {
+      st.lat = Math.round(c.lat * 1e6) / 1e6; st.lon = Math.round(c.lng * 1e6) / 1e6;
+      Steder.saveAll(state.steder);
+      renderSteder();
+      toast(`«${st.navn}» er flyttet`);
+    }
+    setMode('view');
+  }
   // Trykk i kartet flytter krysset dit
-  map.on('click', e => { if (state.mode === 'place' || state.mode === 'move') map.panTo(e.latlng); });
+  map.on('click', e => { if (isPlacing()) map.panTo(e.latlng); });
 
   function startMove() {
     const d = state.draft;
@@ -1484,6 +1640,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     if (e.key !== 'Escape') return;
     if (state.mode === 'place') setMode('view');
     else if (state.mode === 'move') endMove(false);
+    else if (state.mode === 'stedmove') { state.stedMove = null; setMode('view'); }
     else if (state.mode === 'edit') closeForm();
     else closePanels();
   });
@@ -1504,6 +1661,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     }
     state.obs = Array.isArray(data) ? data : [];
     if (sim.on) applySim(false);
+    renderSteder();
     renderAll();
     if (!storageOk) toast('Nettleseren tillater ikke lagring. Observasjoner forsvinner når siden lukkes.', true);
   })();
