@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="no" data-style="a">
+<html lang="no" data-style="b">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -9,38 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Saira:wght@400;500;600&family=Saira+Condensed:wght@600;700&display=swap">
 <style>
-/* Prototype med tre designforslag (A Granskog, B Kartblad, C Skumring).
-   Kartet fyller skjermen; verktøy, paneler og statuslinje legger seg over.
-   Hver stil setter bare tokens og plassering; komponentene er felles. */
-
-/* ---------- A: Granskog (lys, med mørk variant) ---------- */
-:root, :root[data-style="a"]{
-  --bg:#EEF1EB; --surface:#FBFCF9; --surface-2:#EEF2EC; --field:#FFFFFF;
-  --ink:#17211B; --ink-2:#56635A; --line-soft:#D3DACF; --rule:#D3DACF;
-  --brand:#1E3B2F; --brand-ink:#F2F5EF; --accent:#E4572E; --accent-ink:#FFFFFF;
-  --chip-bg:#FFFFFF; --chip-on-bg:#1E3B2F; --chip-on-ink:#F2F5EF;
-  --ok:#2E7A4C; --danger:#B42318;
-  --seq:#1E5A3E; --seq-ink:#FFFFFF; --empty:#E6EBE3; --grid:#E1E6DE; --axis:#B9C2B6;
-  --s0:#7D857E; --s1:#257de0; --s2:#f47230; --s3:#00b894; --s4:#f2a600; --s5:#ee7fac; --s6:#008a17; --s7:#6a4ce2;
-  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
-  --body:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  --radius:14px; --radius-s:9px; --shadow:0 6px 22px rgba(12,22,16,.22);
-  --top:0px; --dock:0px; --tap:44px; --tile-filter:none;
-  color-scheme:light;
-}
-@media (prefers-color-scheme: dark){
-  :root[data-style="a"]{
-    --bg:#0F1511; --surface:#18211B; --surface-2:#212C24; --field:#111813;
-    --ink:#E5EBE4; --ink-2:#9AA89E; --line-soft:#2F3C33; --rule:#2F3C33;
-    --brand:#24473A; --chip-bg:#18211B; --chip-on-bg:#E5EBE4; --chip-on-ink:#18211B;
-    --ok:#6CC08F; --danger:#FF8A7A;
-    --seq:#8FD3A9; --seq-ink:#0F1511; --empty:#222C25; --grid:#28332B; --axis:#465348;
-    --s0:#8E968F; --s1:#338ced; --s2:#e76624; --s3:#00a888; --s4:#d28e05; --s5:#e24d8b; --s6:#0aac23; --s7:#9887ef;
-    --shadow:0 6px 22px rgba(0,0,0,.5);
-    color-scheme:dark;
-  }
-}
+/* Kartblad: papirhvitt, skarpe linjer og kartrødt, inspirert av norske kartblad.
+   Kartet fyller skjermen med trådkors i midten; topplinje, koordinatlinje og verktøylinje er dokket. */
 
 /* ---------- B: Kartblad (papirhvitt, skarpe linjer, kartrødt) ---------- */
 :root[data-style="b"]{
@@ -71,23 +41,6 @@
   }
 }
 
-/* ---------- C: Skumring (mørk, store flater, ravgul) ---------- */
-:root[data-style="c"]{
-  --bg:#0B0F0C; --surface:#121813; --surface-2:#1B231C; --field:#0D120E;
-  --ink:#ECE6D6; --ink-2:#A8A291; --line-soft:#2C362E; --rule:#2C362E;
-  --brand:#121813; --brand-ink:#ECE6D6; --accent:#FFB547; --accent-ink:#1A1206;
-  --chip-bg:#1B231C; --chip-on-bg:#FFB547; --chip-on-ink:#1A1206;
-  --ok:#8FD3A9; --danger:#FF8A7A;
-  --seq:#FFB547; --seq-ink:#1A1206; --empty:#1E271F; --grid:#253026; --axis:#4A564B;
-  --s0:#8E968F; --s1:#338ced; --s2:#e76624; --s3:#00a888; --s4:#d28e05; --s5:#e24d8b; --s6:#0aac23; --s7:#9887ef;
-  --display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
-  --body:"Saira",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
-  --radius:20px; --radius-s:12px; --shadow:0 10px 30px rgba(0,0,0,.55);
-  --top:0px; --dock:80px; --tap:52px; --tile-filter:brightness(.72) saturate(.85) contrast(1.05);
-  color-scheme:dark;
-}
-
 /* ---------- Felles ---------- */
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -109,10 +62,6 @@ svg.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-wid
 .brand{min-width:0}
 .brand b{display:block;font-family:var(--display);font-weight:700;letter-spacing:.06em;text-transform:uppercase;line-height:1.05;white-space:nowrap}
 .brand span{display:block;font-size:12px;opacity:.8;white-space:nowrap}
-.stylepick{position:fixed;z-index:1001;display:flex;align-items:center;gap:2px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow);padding:3px;border-radius:999px}
-.stylepick span{font-size:12px;color:var(--ink-2);padding:0 6px 0 8px}
-.stylepick button{border:0;background:transparent;width:32px;height:32px;border-radius:999px;font-weight:600;font-family:var(--display);font-size:16px}
-.stylepick button[aria-pressed="true"]{background:var(--chip-on-bg);color:var(--chip-on-ink)}
 
 /* Verktøy */
 .toolbar{position:fixed;z-index:1000}
@@ -196,6 +145,23 @@ input[type=number]{font-variant-numeric:tabular-nums}
 .save{border:0;border-radius:var(--radius-s);background:var(--accent);color:var(--accent-ink);padding:13px 16px;font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.03em;min-height:52px}
 .save:disabled{opacity:.6}
 .peil{display:grid;gap:8px;background:var(--surface-2);border-radius:var(--radius-s);padding:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;border:1.5px solid var(--rule)}
+.seg button{border:0;background:var(--chip-bg);color:var(--ink);min-height:50px;font-family:var(--display);font-weight:600;font-size:18px;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:9px}
+.seg button + button{border-left:1.5px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--chip-on-bg);color:var(--chip-on-ink)}
+.seg .sw{width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 2px var(--chip-bg)}
+.counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.cnt{display:grid;gap:6px;min-width:0}
+.cnt label{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.step{display:grid;grid-template-columns:46px minmax(0,1fr) 46px;border:1.5px solid var(--rule);background:var(--field)}
+.step button{border:0;background:var(--surface-2);color:var(--ink);font-size:24px;line-height:1;min-height:46px}
+.step input{border:0;border-radius:0;text-align:center;font-size:19px;font-weight:600;padding:6px 0;min-height:46px;-moz-appearance:textfield;appearance:textfield}
+.step input::-webkit-inner-spin-button,.step input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.counts .total{grid-column:1/-1;margin:0;color:var(--ink-2);font-size:14px}
+.counts .total b{color:var(--ink);font-variant-numeric:tabular-nums}
+.banner .go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.editing .crosshair{display:none!important}
+.placing .crosshair::after{content:"";position:absolute;inset:13px;border:2px solid #fff;border-radius:50%}
 
 /* Liste */
 .list{list-style:none;margin:0;padding:0}
@@ -281,27 +247,11 @@ input[type=number]{font-variant-numeric:tabular-nums}
   @keyframes up{from{transform:translateY(14px);opacity:.5}to{transform:none;opacity:1}}
 }
 
-/* ===== A: Granskog — flytende kort og chips ===== */
-[data-style="a"] .appbar{top:calc(10px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));background:var(--brand);color:var(--brand-ink);border-radius:var(--radius-s);padding:7px 12px 6px;box-shadow:var(--shadow)}
-[data-style="a"] .brand b{font-size:17px}
-[data-style="a"] .stylepick{top:calc(10px + env(safe-area-inset-top,0px));right:calc(64px + env(safe-area-inset-right,0px))}
-[data-style="a"] .toolbar{top:calc(68px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));right:10px;display:flex;flex-wrap:wrap;gap:8px;pointer-events:none}
-[data-style="a"] .tb{pointer-events:auto;border-radius:var(--radius-s);box-shadow:var(--shadow);padding:0 12px;font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.02em}
-[data-style="a"] #t-new{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(30px + env(safe-area-inset-bottom,0px));border-radius:999px;background:var(--accent);color:var(--accent-ink);padding:0 20px;min-height:54px;font-size:19px;box-shadow:0 8px 22px rgba(160,50,20,.38)}
-[data-style="a"] #t-gps{position:fixed;right:calc(14px + env(safe-area-inset-right,0px));bottom:calc(98px + env(safe-area-inset-bottom,0px));width:48px;height:48px;border-radius:50%;padding:0;justify-content:center}
-[data-style="a"] #t-gps span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-[data-style="a"] .readout{display:none}
-[data-style="a"] .status{top:calc(122px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));right:70px}
-[data-style="a"] .leaflet-bottom.leaflet-left{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
-[data-style="a"] .panel{max-height:calc(100% - 128px - env(safe-area-inset-top,0px))}
-
 /* ===== B: Kartblad — dokket topp- og bunnlinje, trådkors, koordinatlinje ===== */
 [data-style="b"] .appbar{top:0;left:0;right:0;height:calc(var(--top) + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) max(16px, env(safe-area-inset-right,0px)) 0 max(16px, env(safe-area-inset-left,0px));background:var(--surface);color:var(--ink);border-bottom:1.5px solid var(--rule)}
 [data-style="b"] .brand{display:flex;align-items:baseline;gap:10px}
 [data-style="b"] .brand b{font-size:18px;letter-spacing:.1em}
 [data-style="b"] .brand span{font-family:var(--mono);font-size:11px;opacity:1;color:var(--ink-2)}
-[data-style="b"] .stylepick{top:calc(8px + env(safe-area-inset-top,0px));right:max(16px, env(safe-area-inset-right,0px));box-shadow:none;border:1.5px solid var(--rule);border-radius:0;padding:1px}
-[data-style="b"] .stylepick button{border-radius:0;width:30px;height:28px}
 [data-style="b"] .toolbar{left:0;right:0;bottom:0;height:calc(58px + env(safe-area-inset-bottom,0px));padding:0 env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px);display:flex;background:var(--surface);border-top:1.5px solid var(--rule)}
 [data-style="b"] .tb{flex:1 1 0;min-width:0;flex-direction:column;justify-content:center;gap:3px;border-radius:0;padding:4px 2px;font-family:var(--display);font-size:12px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;background:transparent}
 [data-style="b"] .tb + .tb{border-left:1px solid var(--line-soft)}
@@ -317,6 +267,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
 [data-style="b"] .readout{left:0;right:0;bottom:calc(58px + env(safe-area-inset-bottom,0px));height:26px;display:flex;align-items:center;gap:14px;padding:0 max(16px, env(safe-area-inset-right,0px)) 0 max(16px, env(safe-area-inset-left,0px));background:var(--surface);color:var(--ink);border-top:1.5px solid var(--rule);white-space:nowrap;overflow:hidden}
 [data-style="b"] .readout .z{color:var(--ink-2)}
 [data-style="b"] .crosshair{display:block;position:fixed;z-index:500;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;background:linear-gradient(#fff,#fff) center/1.5px 100% no-repeat,linear-gradient(#fff,#fff) center/100% 1.5px no-repeat;mix-blend-mode:difference}
+[data-style="b"] .placing .crosshair{width:48px;height:48px;margin:-24px 0 0 -24px}
 [data-style="b"] .status{top:calc(var(--top) + 10px + env(safe-area-inset-top,0px));left:max(12px, env(safe-area-inset-left,0px));right:70px}
 [data-style="b"] .pill{border-radius:0;box-shadow:none;border:1.5px solid var(--rule)}
 [data-style="b"] .pill button{border-radius:0}
@@ -333,38 +284,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
   [data-style="b"] .panel{top:calc(var(--top) + env(safe-area-inset-top,0px));bottom:calc(var(--dock) + env(safe-area-inset-bottom,0px));right:0;border-top:0;border-left:1.5px solid var(--rule)}
 }
 
-/* ===== C: Skumring — mørk, fanelinje med stor midtknapp ===== */
-[data-style="c"] .appbar{top:calc(10px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));background:rgba(18,24,19,.86);color:var(--ink);border-radius:999px;padding:7px 16px;box-shadow:var(--shadow);backdrop-filter:blur(6px)}
-[data-style="c"] .brand b{font-size:16px;color:var(--accent)}
-[data-style="c"] .brand span{font-size:11.5px}
-[data-style="c"] .stylepick{top:calc(10px + env(safe-area-inset-top,0px));right:calc(64px + env(safe-area-inset-right,0px))}
-[data-style="c"] .toolbar{left:0;right:0;bottom:0;height:calc(80px + env(safe-area-inset-bottom,0px));padding:0 max(6px, env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(6px, env(safe-area-inset-left,0px));display:flex;align-items:stretch;background:rgba(14,19,15,.94);border-top:1px solid var(--line-soft);backdrop-filter:blur(8px)}
-[data-style="c"] .tb{flex:1 1 0;min-width:0;flex-direction:column;justify-content:center;gap:4px;background:transparent;color:var(--ink-2);font-size:12.5px;font-weight:500;padding:6px 2px}
-[data-style="c"] .tb svg{width:24px;height:24px}
-[data-style="c"] .tb[aria-pressed="true"]{background:transparent;color:var(--accent)}
-[data-style="c"] .tb .n{position:absolute;top:8px;left:calc(50% + 6px);font-size:10.5px;padding:0 5px;min-width:18px;background:var(--surface-2)}
-[data-style="c"] .tb .dot{top:10px;right:calc(50% - 18px);box-shadow:0 0 0 2px #0E130F}
-[data-style="c"] #t-new{flex:0 0 auto;width:72px;align-self:flex-start;margin-top:-22px;height:72px;border-radius:50%;background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 5px #0E130F,0 8px 22px rgba(0,0,0,.6);padding:0;justify-content:center}
-[data-style="c"] #t-new svg{width:30px;height:30px;stroke-width:2.6}
-[data-style="c"] #t-new span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-[data-style="c"] .readout{display:none}
-[data-style="c"] .status{top:calc(66px + env(safe-area-inset-top,0px));left:calc(10px + env(safe-area-inset-left,0px));right:70px}
-[data-style="c"] .panel{max-height:calc(100% - var(--dock) - 74px - env(safe-area-inset-top,0px));background:rgba(18,24,19,.97);box-shadow:0 -14px 40px rgba(0,0,0,.6)}
-[data-style="c"] .chip{min-height:42px;padding:8px 14px;font-size:15px}
-[data-style="c"] .rose{grid-template-columns:repeat(3, minmax(0,50px))}
-[data-style="c"] .rose button{height:46px}
-[data-style="c"] .save{min-height:58px;font-size:21px}
-[data-style="c"] .leaflet-control-scale-line{background:rgba(18,24,19,.85);color:var(--ink);border-color:var(--ink)}
-
-@media (min-width:800px){
-  [data-style="a"] .panel,[data-style="c"] .panel{top:calc(64px + env(safe-area-inset-top,0px))}
-}
-@media (min-width:800px){
-  [data-style="a"] .has-panel #t-new,[data-style="a"] .has-panel #t-gps{right:calc(436px + env(safe-area-inset-right,0px))}
-}
 @media (max-width:799px){ #p-form{max-height:62%} }
-@media (max-width:399px){ .stylepick span{display:none} }
-</style>
+@media (max-width:399px){ </style>
 </head>
 <body>
 <div id="map" role="application" aria-label="Kart over Linge"></div>
@@ -372,14 +293,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
 <div class="crosshair" aria-hidden="true"></div>
 
 <header class="appbar">
-  <div class="brand"><b>Linge viltobs</b><span id="brand-sub">Valldal · Fjord kommune</span></div>
+  <div class="brand"><b>Linge viltobs</b><span id="brand-sub">EUREF89 · UTM 33 · Valldal</span></div>
 </header>
-<div class="stylepick" role="group" aria-label="Designforslag">
-  <span>Forslag</span>
-  <button type="button" data-s="a" aria-label="Forslag A, Granskog">A</button>
-  <button type="button" data-s="b" aria-label="Forslag B, Kartblad">B</button>
-  <button type="button" data-s="c" aria-label="Forslag C, Skumring">C</button>
-</div>
 
 <nav class="toolbar" aria-label="Verktøy">
   <button class="tb" id="t-filter" type="button" aria-pressed="false">
@@ -403,8 +318,9 @@ input[type=number]{font-variant-numeric:tabular-nums}
 <div class="status" id="status"></div>
 
 <div class="banner" id="banner" hidden>
-  <p>Trykk i kartet der dyret ble sett</p>
+  <p id="banner-text">Flytt kartet så krysset står der dyret ble sett</p>
   <div class="btns">
+    <button type="button" class="go" id="pl-cross">Legg til ved krysset</button>
     <button type="button" id="pl-here">Der jeg står</button>
     <button type="button" id="pl-peil">Retning og avstand fra meg</button>
     <button type="button" class="cancel" id="pl-cancel">Avbryt</button>
@@ -418,18 +334,14 @@ input[type=number]{font-variant-numeric:tabular-nums}
     <div class="links"><button class="link" type="button" id="f-close">Avbryt</button></div>
   </div>
   <form id="obs-form" novalidate>
-    <div class="row2">
-      <div class="f">
-        <label for="f-art">Art</label>
-        <div class="artfield"><span class="sw" id="f-sw"></span><input id="f-art" list="arter" autocomplete="off" placeholder="Velg eller skriv" maxlength="40"></div>
-        <datalist id="arter"></datalist>
+    <fieldset class="f"><legend>Art</legend>
+      <div class="seg" id="f-art" role="group" aria-label="Art">
+        <button type="button" data-v="Hjort" aria-pressed="false"><span class="sw" style="background:var(--s1)"></span>Hjort</button>
+        <button type="button" data-v="Rådyr" aria-pressed="false"><span class="sw" style="background:var(--s2)"></span>Rådyr</button>
       </div>
-      <div class="f">
-        <label for="f-antall">Antall</label>
-        <input id="f-antall" type="number" inputmode="numeric" min="1" max="999" step="1" value="1">
-      </div>
-    </div>
-    <div class="chips" id="f-artchips" aria-label="Vanlige arter"></div>
+    </fieldset>
+    <div class="counts" id="f-hjort" hidden></div>
+    <div class="counts" id="f-raadyr" hidden></div>
 
     <div class="f">
       <label for="f-tid">Dato og klokkeslett</label>
@@ -441,7 +353,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
         <div class="f"><label for="f-brg">Peiling fra deg</label><div class="unit"><input id="f-brg" type="number" inputmode="numeric" min="0" max="359" step="1"><span>°</span></div></div>
         <div class="f"><label for="f-dist">Avstand</label><div class="unit"><input id="f-dist" type="number" inputmode="numeric" min="1" max="9999" step="1"><span>m</span></div></div>
       </div>
-      <p class="hint">Den stiplede linjen er siktlinjen fra der du står. Du kan også dra markøren.</p>
+      <p class="hint">Den stiplede linjen er siktlinjen fra der du står.</p>
     </div>
 
     <div class="wx" id="wx" data-state="loading"><p id="wx-text">Henter værdata …</p><button type="button" id="wx-refresh">Hent på nytt</button></div>
@@ -456,7 +368,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     <fieldset class="f"><legend>Snøforhold</legend><div class="chips" id="f-sno"></div></fieldset>
 
     <div class="pos" id="f-pos"></div>
-    <p class="hint" id="f-drag">Dra markøren i kartet for å justere posisjonen.</p>
+    <div><button class="chip" type="button" id="f-move">Endre posisjon med krysset</button></div>
     <p class="err" id="f-err" hidden></p>
     <button class="save" type="submit" id="f-save">Lagre observasjon</button>
   </form>
@@ -521,10 +433,10 @@ input[type=number]{font-variant-numeric:tabular-nums}
   /* ================= Oppsett ================= */
   const START = { lat: 62.2960, lon: 7.2000, zoom: 14 };   // Linge, Valldal
   const LINGE_GARD = [62.2872, 7.2060];                     // omtrentlig: litt øst for ferjekaia, kan dras
-  const SPECIES = [['Hjort', 'Hj'], ['Elg', 'El'], ['Rådyr', 'Rå'], ['Rødrev', 'Rø'], ['Gaupe', 'Ga'], ['Hare', 'Ha'], ['Storfugl', 'St']];
-  const MARK = ['#257de0', '#f47230', '#00b894', '#f2a600', '#ee7fac', '#008a17', '#6a4ce2'];
+  const SPECIES = [['Hjort', 'Hj'], ['Rådyr', 'Rå']];
+  const MARK = ['#257de0', '#f47230'];
+  const HJORT_KAT = [['bukk', 'Bukk'], ['kolle', 'Kolle'], ['kalv', 'Kalv'], ['ungdyr', 'Ungdyr']];
   const ANNET = '#7D857E';
-  const EXTRA = ['Bjørn', 'Ulv', 'Jerv', 'Grevling', 'Mår', 'Orrfugl', 'Lirype', 'Fjellrype', 'Villrein', 'Kongeørn', 'Havørn'];
   const VAER = ['Sol / klart', 'Skyet', 'Regn', 'Snøvær', 'Tåke'];
   const DIRS = ['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV'];
   const ROSE = ['NV', 'N', 'NØ', 'V', '*', 'Ø', 'SV', 'S', 'SØ'];
@@ -618,7 +530,11 @@ input[type=number]{font-variant-numeric:tabular-nums}
     const a = String(art || '').trim().toLowerCase();
     return SPECIES.findIndex(s => s[0].toLowerCase() === a);
   }
-  function canon(art) { const i = slot(art); if (i >= 0) return SPECIES[i][0]; const x = EXTRA.find(e => e.toLowerCase() === String(art).trim().toLowerCase()); return x || String(art).trim(); }
+  function canon(art) { const i = slot(art); return i >= 0 ? SPECIES[i][0] : String(art || '').trim(); }
+  function katText(o) {
+    if (!o.kat) return '';
+    return HJORT_KAT.filter(([k]) => Number(o.kat[k]) > 0).map(([k, l]) => `${o.kat[k]} ${l.toLowerCase()}`).join(', ');
+  }
   const markColor = art => { const i = slot(art); return i < 0 ? ANNET : MARK[i]; };
   const cssColor = art => { const i = slot(art); return i < 0 ? 'var(--s0)' : `var(--s${i + 1})`; };
   const inkOn = art => (slot(art) === 3 ? '#0b0b0b' : '#ffffff');
@@ -701,13 +617,11 @@ input[type=number]{font-variant-numeric:tabular-nums}
   function makeExamples() {
     const r = rng(20261125);
     const pick = a => a[Math.floor(r() * a.length)];
-    const W = [['Hjort', 9], ['Rådyr', 5], ['Rødrev', 4], ['Elg', 3], ['Storfugl', 2], ['Hare', 2], ['Gaupe', 1]];
-    const tot = W.reduce((s, x) => s + x[1], 0);
-    const pickArt = () => { let x = r() * tot; for (const [a, w] of W) { if ((x -= w) < 0) return a; } return 'Hjort'; };
+    const ri = (a, b) => a + Math.floor(r() * (b - a + 1));
     const out = [];
     const now = Date.now();
-    for (let i = 0; i < 28; i++) {
-      const art = pickArt();
+    for (let i = 0; i < 26; i++) {
+      const art = r() < 0.65 ? 'Hjort' : 'Rådyr';
       const day = osloStr(now - Math.floor(r() * 395) * 864e5).slice(0, 10);
       let h = r() < 0.5 ? 5 + Math.floor(r() * 4) : 16 + Math.floor(r() * 5);
       if (r() < 0.12) h = 10 + Math.floor(r() * 5);
@@ -716,7 +630,13 @@ input[type=number]{font-variant-numeric:tabular-nums}
       const mon = +tid.slice(5, 7);
       const winter = mon <= 4 || mon >= 11;
       const lat = 62.2945 + r() * 0.019, lon = 7.172 + r() * 0.055;
-      const antall = art === 'Hjort' ? 1 + Math.floor(r() * r() * 6) : art === 'Elg' ? 1 + Math.floor(r() * 3) : art === 'Rådyr' ? 1 + Math.floor(r() * 2) : 1;
+      let kat = null, antall;
+      if (art === 'Hjort') {
+        const type = r();
+        if (type < 0.25) kat = { bukk: ri(1, 2), kolle: 0, kalv: 0, ungdyr: r() < 0.3 ? 1 : 0 };
+        else { const kolle = ri(1, 4); kat = { bukk: r() < 0.15 ? 1 : 0, kolle, kalv: Math.min(kolle, ri(0, kolle)), ungdyr: ri(0, 2) }; }
+        antall = kat.bukk + kat.kolle + kat.kalv + kat.ungdyr;
+      } else antall = ri(1, 2);
       let fra = null;
       if (r() < 0.35) {
         const brg = Math.floor(r() * 360), dist = 80 + Math.floor(r() * 500);
@@ -724,7 +644,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
         fra = { lat: o[0], lon: o[1], retning: brg, avstand: dist };
       }
       out.push({
-        id: 'ex-' + i, eksempel: true, registrert: new Date(now).toISOString(), tid, art, antall,
+        id: 'ex2-' + i, eksempel: true, registrert: new Date(now).toISOString(), tid, art, antall, kat,
         gikk: pick(['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV', 'Ro', 'Ro', '']),
         vaer: pick(winter ? ['Skyet', 'Snøvær', 'Sol / klart', 'Tåke', 'Skyet'] : ['Sol / klart', 'Skyet', 'Regn', 'Tåke', 'Skyet']),
         vind: pick(['N', 'NØ', 'Ø', 'SØ', 'S', 'SV', 'V', 'NV', 'Stille', 'V', 'SV']),
@@ -742,18 +662,13 @@ input[type=number]{font-variant-numeric:tabular-nums}
     touched: { vaer: false, vind: false }, wxSeq: 0, panel: null,
     filter: { skjul: new Set(prefs.skjul || []), periode: prefs.periode || 'alt', fra: prefs.fra || '', til: prefs.til || '' }
   };
-  const selection = { vaer: '', vind: '', gikk: '', sno: '' };
+  const selection = { art: '', vaer: '', vind: '', gikk: '', sno: '' };
 
-  /* ================= Stilvalg ================= */
-  function setStyle(s) {
-    if (!['a', 'b', 'c'].includes(s)) s = 'a';
-    document.documentElement.dataset.style = s;
-    $$('.stylepick button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === s)));
-    ui.save({ stil: s });
-    $('#brand-sub').textContent = s === 'b' ? 'EUREF89 · UTM 33 · Fjord kommune' : 'Valldal · Fjord kommune';
-    setTimeout(() => { map.invalidateSize(); updateReadout(); if (state.panel === 'p-stats') renderStats(); }, 30);
+  /* ================= Visningsoppstart ================= */
+  function initView() {
+    document.documentElement.dataset.style = 'b';
+    setTimeout(() => { map.invalidateSize(); updateReadout(); }, 30);
   }
-  $$('.stylepick button').forEach(b => b.addEventListener('click', () => { setStyle(b.dataset.s); try { history.replaceState(null, '', '#' + b.dataset.s); } catch (e) { /* ignorer */ } }));
 
   /* ================= Kart ================= */
   const map = L.map('map', { zoomControl: false, center: [START.lat, START.lon], zoom: START.zoom, maxZoom: 20 });
@@ -907,6 +822,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     });
     const rows = [
       ['Antall', String(o.antall)],
+      ...(o.kat ? [['Fordeling', katText(o) || '–']] : []),
       ['Gikk mot', o.gikk === 'Ro' ? 'Sto i ro' : (o.gikk || '–')],
       ['Vær', o.vaer || '–'], ['Vind fra', o.vind || '–'], ['Snø', o.sno || '–']
     ];
@@ -933,7 +849,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
       if (o.id === state.hiddenId || !isFinite(o.lat) || !isFinite(o.lon)) return;
       const m = L.marker([o.lat, o.lon], { icon: markerIcon(o), title: `${o.art}, ${fmtTid(o.tid)}`, riseOnHover: true })
         .bindPopup(() => popupEl(o), { maxWidth: 300, autoPanPaddingTopLeft: [10, 150], autoPanPaddingBottomRight: [10, 110] });
-      m.on('click', e => { if (state.mode === 'place') { m.closePopup(); openForm({ lat: e.latlng.lat, lon: e.latlng.lng }); } });
+      m.on('click', e => { if (state.mode === 'place' || state.mode === 'move') { m.closePopup(); map.panTo(e.latlng); } });
       m.on('popupopen', () => { if (o.fra) sightLine(sightLayer, Object.assign({ to: [o.lat, o.lon] }, o.fra)); });
       m.on('popupclose', () => sightLayer.clearLayers());
       m.addTo(markerLayer);
@@ -953,7 +869,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     empty.textContent = state.obs.length === 0 ? 'Ingen observasjoner ennå. Trykk «Ny observasjon» og deretter i kartet for å legge inn den første.' : 'Ingen observasjoner passer filteret. Endre eller nullstill filteret.';
     const ul = $('#list');
     ul.replaceChildren(...items.map(o => {
-      const meta = [o.gikk && o.gikk !== 'Ro' ? 'mot ' + o.gikk : (o.gikk === 'Ro' ? 'sto i ro' : ''), o.vaer, o.vind ? 'vind ' + o.vind : '', o.sno && o.sno !== 'Ingen' ? 'snø: ' + o.sno.toLowerCase() : ''].filter(Boolean).join(' · ');
+      const meta = [katText(o), o.gikk && o.gikk !== 'Ro' ? 'mot ' + o.gikk : (o.gikk === 'Ro' ? 'sto i ro' : ''), o.vaer, o.vind ? 'vind ' + o.vind : '', o.sno && o.sno !== 'Ingen' ? 'snø: ' + o.sno.toLowerCase() : ''].filter(Boolean).join(' · ');
       const b = el('button', { type: 'button' },
         el('span', { class: 'disc', style: `background:${markColor(o.art)};color:${inkOn(o.art)}`, text: abbr(o.art) }),
         el('span', { class: 'a' }, o.art + (o.antall > 1 ? ` ×${o.antall}` : ''), o.eksempel ? el('span', { class: 'ex', text: 'Eksempel' }) : null),
@@ -1030,59 +946,67 @@ input[type=number]{font-variant-numeric:tabular-nums}
     $('#stats-sub').textContent = filterActive() ? `Etter filteret: ${list.length} av ${state.obs.length} observasjoner` : `Alle ${list.length} observasjoner`;
     if (!list.length) { body.replaceChildren(el('p', { class: 'empty', text: 'Ingen observasjoner å vise. Endre filteret eller legg inn en observasjon.' })); return; }
     const W = Math.max(280, Math.floor(body.clientWidth || 360));
+    const LBL = 84;
+    const sumAnt = arr => arr.reduce((t, o) => t + (Number(o.antall) || 0), 0);
+    const hj = list.filter(o => canon(o.art) === 'Hjort');
+    const ra = list.filter(o => canon(o.art) === 'Rådyr');
+    const tile = (v, l) => el('div', { class: 'tile' }, el('div', { class: 'v', text: v }), el('div', { class: 'l', text: l }));
+    const parts = [el('div', { class: 'tiles' }, tile(list.length, 'observasjoner'), tile(sumAnt(hj), 'hjort sett'), tile(sumAnt(ra), 'rådyr sett'))];
 
+    // Hjort etter kategori: liggende søyler, verdi ved enden
+    if (hj.length) {
+      const kat = {}; HJORT_KAT.forEach(([k]) => { kat[k] = 0; });
+      let ufordelt = 0;
+      hj.forEach(o => { if (o.kat) HJORT_KAT.forEach(([k]) => { kat[k] += Number(o.kat[k]) || 0; }); else ufordelt += Number(o.antall) || 0; });
+      const rows = HJORT_KAT.map(([k, l]) => ({ label: l, n: kat[k] }));
+      if (ufordelt) rows.push({ label: 'Ikke fordelt', n: ufordelt });
+      const ROW = 28, BH = 14, VAL = 64, maxN = Math.max(1, ...rows.map(r => r.n)), barMax = W - LBL - VAL;
+      const bars = sv('svg', { class: 'chart', viewBox: `0 0 ${W} ${rows.length * ROW}`, role: 'img', 'aria-label': 'Hjort sett etter kategori' });
+      rows.forEach((r, i) => {
+        const y = i * ROW + (ROW - BH) / 2;
+        bars.append(sv('text', { x: LBL - 10, y: y + BH / 2 + 4.5, 'text-anchor': 'end', class: 'nm' }, r.label));
+        let w = 0;
+        if (r.n > 0) {
+          w = Math.max(3, r.n / maxN * barMax);
+          const rr = Math.min(4, w);
+          bars.append(sv('path', { d: `M${LBL},${y} h${w - rr} a${rr},${rr} 0 0 1 ${rr},${rr} v${BH - 2 * rr} a${rr},${rr} 0 0 1 ${-rr},${rr} h${-(w - rr)} z`, fill: 'var(--s1)' },
+            sv('title', null, `${r.label}: ${r.n} dyr`)));
+        }
+        bars.append(sv('text', { x: LBL + w + 7, y: y + BH / 2 + 4.5 }, `${r.n} dyr`));
+      });
+      parts.push(el('h3', { text: 'Hjort etter kategori' }), bars);
+      const ratios = [];
+      if (kat.kolle) ratios.push(`${deg(kat.kalv / kat.kolle, 2)} kalv per kolle`);
+      if (kat.bukk) ratios.push(`${deg(kat.kolle / kat.bukk, 2)} kolle per bukk`);
+      if (ratios.length) parts.push(el('p', { class: 'hint', text: ratios.join(' · ') }));
+    }
+
+    // Art og måned: varmekart over antall observasjoner
     const byArt = {};
-    list.forEach(o => {
-      const a = canon(o.art);
-      const r = byArt[a] || (byArt[a] = { art: a, n: 0, dyr: 0, mnd: new Array(12).fill(0) });
-      r.n++; r.dyr += Number(o.antall) || 1; r.mnd[+o.tid.slice(5, 7) - 1]++;
-    });
-    const rows = Object.values(byArt).sort((a, b) => b.n - a.n || a.art.localeCompare(b.art, 'nb'));
-    const totDyr = rows.reduce((s, r) => s + r.dyr, 0);
-
-    const tiles = el('div', { class: 'tiles' },
-      el('div', { class: 'tile' }, el('div', { class: 'v', text: list.length }), el('div', { class: 'l', text: 'observasjoner' })),
-      el('div', { class: 'tile' }, el('div', { class: 'v', text: totDyr }), el('div', { class: 'l', text: 'dyr totalt' })),
-      el('div', { class: 'tile' }, el('div', { class: 'v', text: rows.length }), el('div', { class: 'l', text: rows.length === 1 ? 'art' : 'arter' })));
-
-    // Per art: liggende søyler, verdi ved enden
-    const LBL = 84, VAL = 92, ROW = 28, BH = 14;
-    const maxN = Math.max(...rows.map(r => r.n));
-    const barMax = W - LBL - VAL;
-    const bars = sv('svg', { class: 'chart', viewBox: `0 0 ${W} ${rows.length * ROW}`, role: 'img', 'aria-label': 'Observasjoner per art' });
-    rows.forEach((r, i) => {
-      const y = i * ROW + (ROW - BH) / 2, w = Math.max(3, r.n / maxN * barMax), rr = Math.min(4, w);
-      const d = `M${LBL},${y} h${w - rr} a${rr},${rr} 0 0 1 ${rr},${rr} v${BH - 2 * rr} a${rr},${rr} 0 0 1 ${-rr},${rr} h${-(w - rr)} z`;
-      bars.append(
-        sv('text', { x: LBL - 10, y: y + BH / 2 + 4.5, 'text-anchor': 'end', class: 'nm' }, r.art),
-        sv('path', { d, fill: cssColor(r.art) }, sv('title', null, `${r.art}: ${r.n} observasjoner, ${r.dyr} dyr`)),
-        sv('text', { x: LBL + w + 7, y: y + BH / 2 + 4.5 }, `${r.n} obs · ${r.dyr} dyr`));
-    });
-
-    // Art × måned: varmekart i én fargetone
-    const HDR = 18, GAP = 2, CH = 24;
-    const cw = (W - LBL) / 12;
-    const maxM = Math.max(...rows.map(r => Math.max(...r.mnd)));
-    const heat = sv('svg', { class: 'chart', viewBox: `0 0 ${W} ${HDR + rows.length * (CH + GAP)}`, role: 'img', 'aria-label': 'Observasjoner per art og måned' });
+    list.forEach(o => { const a = canon(o.art); (byArt[a] || (byArt[a] = new Array(12).fill(0)))[+o.tid.slice(5, 7) - 1]++; });
+    const arts = Object.keys(byArt).sort((a, b) => (slot(a) < 0 ? 99 : slot(a)) - (slot(b) < 0 ? 99 : slot(b)) || a.localeCompare(b, 'nb'));
+    const HDR = 18, GAP = 2, CH = 26, cw = (W - LBL) / 12;
+    const maxM = Math.max(...arts.map(a => Math.max(...byArt[a])));
+    const heat = sv('svg', { class: 'chart', viewBox: `0 0 ${W} ${HDR + arts.length * (CH + GAP)}`, role: 'img', 'aria-label': 'Observasjoner per art og måned' });
     MND1.forEach((m, c) => heat.append(sv('text', { x: LBL + c * cw + cw / 2, y: 12, 'text-anchor': 'middle', class: 'ax' }, m)));
-    rows.forEach((r, i) => {
+    arts.forEach((a, i) => {
       const y = HDR + i * (CH + GAP);
-      heat.append(sv('text', { x: LBL - 10, y: y + CH / 2 + 4.5, 'text-anchor': 'end', class: 'nm' }, r.art));
-      r.mnd.forEach((v, c) => {
+      heat.append(sv('text', { x: LBL - 10, y: y + CH / 2 + 4.5, 'text-anchor': 'end', class: 'nm' }, a));
+      byArt[a].forEach((v, c) => {
         const op = v ? 0.22 + 0.78 * (v / maxM) : 1;
         heat.append(sv('rect', { x: LBL + c * cw + GAP / 2, y, width: Math.max(1, cw - GAP), height: CH, rx: 3, fill: v ? 'var(--seq)' : 'var(--empty)', 'fill-opacity': op },
-          sv('title', null, `${r.art}, ${MND[c].replace('.', '')}: ${v} observasjoner`)));
+          sv('title', null, `${a}, ${MND[c].replace('.', '')}: ${v} observasjoner`)));
         if (v) heat.append(sv('text', { x: LBL + c * cw + cw / 2, y: y + CH / 2 + 4, 'text-anchor': 'middle', class: 'in', style: `fill:${op > 0.6 ? 'var(--seq-ink)' : 'var(--ink)'}` }, v));
       });
     });
+    parts.push(el('h3', { text: 'Observasjoner per måned' }), heat);
 
     // Tid på døgnet: 24 timer
     const hrs = new Array(24).fill(0);
     list.forEach(o => { hrs[+o.tid.slice(11, 13)]++; });
     const maxH = Math.max(1, ...hrs);
     const HL = 26, HR = 4, HT = 16, HB = 22, HH = 120;
-    const slotW = (W - HL - HR) / 24, bw = Math.min(24, slotW - 2);
-    const plotH = HH - HT - HB;
+    const slotW = (W - HL - HR) / 24, bw = Math.min(24, slotW - 2), plotH = HH - HT - HB;
     const tod = sv('svg', { class: 'chart', viewBox: `0 0 ${W} ${HH}`, role: 'img', 'aria-label': 'Observasjoner per time på døgnet' });
     tod.append(
       sv('line', { x1: HL, x2: W - HR, y1: HT, y2: HT, stroke: 'var(--grid)', 'stroke-width': 1 }),
@@ -1091,22 +1015,17 @@ input[type=number]{font-variant-numeric:tabular-nums}
     hrs.forEach((v, h) => {
       const x = HL + h * slotW + (slotW - bw) / 2;
       if (v) {
-        const hgt = v / maxH * plotH, rr = Math.min(3, bw / 2, hgt);
-        const y0 = HT + plotH;
-        const d = `M${x},${y0} v${-(hgt - rr)} a${rr},${rr} 0 0 1 ${rr},${-rr} h${bw - 2 * rr} a${rr},${rr} 0 0 1 ${rr},${rr} v${hgt - rr} z`;
-        tod.append(sv('path', { d, fill: 'var(--seq)' }, sv('title', null, `Kl. ${pad(h)}–${pad((h + 1) % 24)}: ${v} observasjoner`)));
+        const hgt = v / maxH * plotH, rr = Math.min(3, bw / 2, hgt), y0 = HT + plotH;
+        tod.append(sv('path', { d: `M${x},${y0} v${-(hgt - rr)} a${rr},${rr} 0 0 1 ${rr},${-rr} h${bw - 2 * rr} a${rr},${rr} 0 0 1 ${rr},${rr} v${hgt - rr} z`, fill: 'var(--seq)' },
+          sv('title', null, `Kl. ${pad(h)}–${pad((h + 1) % 24)}: ${v} observasjoner`)));
       }
       if (h % 6 === 0) tod.append(sv('text', { x: HL + h * slotW, y: HH - 5, 'text-anchor': 'start', class: 'ax' }, pad(h)));
     });
     tod.append(sv('line', { x1: HL, x2: W - HR, y1: HT + plotH + .5, y2: HT + plotH + .5, stroke: 'var(--axis)', 'stroke-width': 1 }));
-
     const peak = hrs.indexOf(Math.max(...hrs));
-    body.replaceChildren(
-      tiles,
-      el('h3', { text: 'Per art' }), bars,
-      el('h3', { text: 'Art og måned' }), heat,
-      el('h3', { text: 'Tid på døgnet' }), tod,
+    parts.push(el('h3', { text: 'Tid på døgnet' }), tod,
       el('p', { class: 'hint', text: `Flest observasjoner mellom kl. ${pad(peak)} og ${pad((peak + 1) % 24)}. Hold markøren over en søyle eller rute for å se tallet.` }));
+    body.replaceChildren(...parts);
   }
 
   /* ================= Paneler ================= */
@@ -1373,27 +1292,81 @@ input[type=number]{font-variant-numeric:tabular-nums}
   chipGroup($('#f-sno'), SNO, 'sno');
   roseGroup($('#f-vind'), 'vind', ['Stille', 'Stille'], false, () => { state.touched.vind = true; $('#auto-vind').hidden = true; });
   roseGroup($('#f-gikk'), 'gikk', ['Ro', 'Sto i ro'], true);
-  $('#arter').replaceChildren(...SPECIES.map(s => s[0]).concat(EXTRA).map(a => el('option', { value: a })));
-  $('#f-artchips').replaceChildren(...SPECIES.map(([a]) => el('button', {
-    type: 'button', class: 'chip', 'data-v': a, 'aria-pressed': 'false',
-    onclick: () => { $('#f-art').value = a; syncArt(); }
-  }, el('span', { class: 'sw', style: `background:${cssColor(a)}` }), a)));
-  function syncArt() {
-    const a = $('#f-art').value.trim();
-    $('#f-sw').style.background = a ? cssColor(a) : 'var(--line-soft)';
-    $$('#f-artchips .chip').forEach(c => c.setAttribute('aria-pressed', String(slot(a) >= 0 && c.dataset.v === canon(a))));
+  function cntRow(id, label) {
+    const inp = el('input', { id, type: 'number', inputmode: 'numeric', min: 0, max: 99, step: 1, value: 0 });
+    const btn = (d, lab) => el('button', { type: 'button', 'aria-label': lab, onclick: () => {
+      inp.value = Math.max(0, Math.min(99, (parseInt(inp.value, 10) || 0) + d)); updTotal();
+    } }, d < 0 ? '−' : '+');
+    inp.addEventListener('input', updTotal);
+    return el('div', { class: 'cnt' }, el('label', { for: id, text: label }),
+      el('div', { class: 'step' }, btn(-1, `Én færre, ${label.toLowerCase()}`), inp, btn(1, `Én til, ${label.toLowerCase()}`)));
   }
-  $('#f-art').addEventListener('input', syncArt);
+  $('#f-hjort').replaceChildren(...HJORT_KAT.map(([k, l]) => cntRow('f-k-' + k, l)),
+    el('p', { class: 'total' }, 'Totalt ', el('b', { id: 'f-total', text: '0' }), ' hjort'));
+  $('#f-raadyr').replaceChildren(cntRow('f-antall', 'Antall rådyr'));
+  function readKat() { const k = {}; HJORT_KAT.forEach(([key]) => { k[key] = Math.max(0, parseInt($('#f-k-' + key).value, 10) || 0); }); return k; }
+  function updTotal() { $('#f-total').textContent = Object.values(readKat()).reduce((a, b) => a + b, 0); }
+  function setArt(a) {
+    selection.art = a || '';
+    $$('#f-art [data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === selection.art)));
+    $('#f-hjort').hidden = selection.art !== 'Hjort';
+    $('#f-raadyr').hidden = selection.art !== 'Rådyr';
+  }
+  $$('#f-art [data-v]').forEach(b => b.addEventListener('click', () => setArt(b.dataset.v)));
 
   function setMode(m) {
     state.mode = m;
-    document.body.classList.toggle('placing', m === 'place');
-    $('#banner').hidden = m !== 'place';
+    const placing = m === 'place' || m === 'move';
+    document.body.classList.toggle('placing', placing);
+    document.body.classList.toggle('editing', m === 'edit');
+    $('#banner').hidden = !placing;
     $('#t-new').hidden = m !== 'view';
+    $('#banner-text').textContent = m === 'move' ? 'Flytt kartet så krysset står på den nye posisjonen' : 'Flytt kartet så krysset står der dyret ble sett';
+    $('#pl-cross').textContent = m === 'move' ? 'Bruk denne posisjonen' : 'Legg til ved krysset';
+    $('#pl-here').hidden = m === 'move';
+    $('#pl-peil').hidden = m === 'move';
+    if (placing) updateReadout();
   }
   $('#t-new').addEventListener('click', () => { closePanels(); map.closePopup(); setMode('place'); });
-  $('#pl-cancel').addEventListener('click', () => setMode('view'));
-  map.on('click', e => { if (state.mode === 'place') openForm({ lat: e.latlng.lat, lon: e.latlng.lng }); });
+  $('#pl-cancel').addEventListener('click', () => { if (state.mode === 'move') endMove(false); else setMode('view'); });
+  $('#pl-cross').addEventListener('click', () => {
+    const c = map.getCenter();
+    if (state.mode === 'move') endMove(true, c);
+    else openForm({ lat: c.lat, lon: c.lng });
+  });
+  // Trykk i kartet flytter krysset dit
+  map.on('click', e => { if (state.mode === 'place' || state.mode === 'move') map.panTo(e.latlng); });
+
+  function startMove() {
+    const d = state.draft;
+    if (!d) return;
+    $('#p-form').hidden = true;
+    if (state.draftMarker) state.draftMarker.setOpacity(0.4);
+    map.setView([d.lat, d.lon], Math.max(map.getZoom(), 15));
+    setMode('move');
+  }
+  function endMove(apply, c) {
+    const d = state.draft;
+    if (!d) { setMode('view'); return; }
+    if (apply) {
+      d.lat = c.lat; d.lon = c.lng;
+      if (d.fra) {
+        const bd = brgDist(d.fra.lat, d.fra.lon, d.lat, d.lon);
+        d.fra.retning = bd.brg; d.fra.avstand = bd.dist;
+        $('#f-brg').value = Math.round(bd.brg); $('#f-dist').value = Math.round(bd.dist);
+      }
+      state.draftMarker.setLatLng([d.lat, d.lon]);
+      drawDraftLine(); showPos(); scheduleWeather();
+    }
+    if (state.draftMarker) state.draftMarker.setOpacity(1);
+    setMode('edit');
+    $('#p-form').hidden = false;
+    if (window.innerWidth < 800) {
+      const pt = map.latLngToContainerPoint([d.lat, d.lon]);
+      map.panBy([0, pt.y - window.innerHeight * 0.22], { animate: true });
+    }
+  }
+  $('#f-move').addEventListener('click', startMove);
 
   $('#pl-here').addEventListener('click', async () => {
     const b = $('#pl-here'); b.disabled = true; b.textContent = 'Finner posisjon …';
@@ -1441,20 +1414,21 @@ input[type=number]{font-variant-numeric:tabular-nums}
     state.draft = { id: o.id || null, lat: o.lat, lon: o.lon, fra: o.fra ? Object.assign({}, o.fra) : null, vaerdata: o.vaerdata || '', eksempel: !!o.eksempel, registrert: o.registrert || null };
     state.touched = { vaer: !isNew, vind: !isNew };
     $('#form-title').textContent = isNew ? 'Ny observasjon' : 'Rediger observasjon';
-    $('#f-art').value = o.art || '';
-    syncArt();
-    $('#f-antall').value = o.antall || 1;
+    const art0 = o.art ? canon(o.art) : (isNew ? (ui.load().sisteArt || '') : '');
+    setArt(slot(art0) >= 0 ? art0 : '');
+    HJORT_KAT.forEach(([k]) => { $('#f-k-' + k).value = o.kat ? (Number(o.kat[k]) || 0) : 0; });
+    updTotal();
+    $('#f-antall').value = canon(o.art) === 'Rådyr' ? (o.antall || 1) : 1;
     $('#f-tid').value = o.tid || osloNow();
     setSel('vaer', o.vaer); setSel('vind', o.vind); setSel('gikk', o.gikk); setSel('sno', o.sno);
     $('#auto-vaer').hidden = true; $('#auto-vind').hidden = true;
     $('#f-err').hidden = true;
     $('#f-peil').hidden = !state.draft.fra;
-    $('#f-drag').hidden = !!state.draft.fra;
     if (state.draft.fra) { $('#f-brg').value = Math.round(state.draft.fra.retning); $('#f-dist').value = Math.round(state.draft.fra.avstand); }
 
     if (!isNew) { state.hiddenId = o.id; renderMarkers(); }
     if (state.draftMarker) map.removeLayer(state.draftMarker);
-    state.draftMarker = L.marker([o.lat, o.lon], { icon: markerIcon(o, true), draggable: true, autoPan: true, zIndexOffset: 1000 }).addTo(map);
+    state.draftMarker = L.marker([o.lat, o.lon], { icon: markerIcon(o, true), draggable: false, zIndexOffset: 1000 }).addTo(map);
     state.draftMarker.on('drag', ev => {
       const ll = ev.target.getLatLng();
       state.draft.lat = ll.lat; state.draft.lon = ll.lng;
@@ -1534,18 +1508,26 @@ input[type=number]{font-variant-numeric:tabular-nums}
     e.preventDefault();
     const d = state.draft;
     if (!d) return;
-    const art = canon($('#f-art').value);
-    const antall = parseInt($('#f-antall').value, 10);
+    const art = selection.art;
+    let antall, kat = null;
     const tid = $('#f-tid').value;
     const errEl = $('#f-err');
     const fail = (t, f) => { errEl.textContent = t; errEl.hidden = false; if (f) f.focus(); };
-    if (!art) return fail('Velg eller skriv inn art.', $('#f-art'));
-    if (!(antall >= 1 && antall <= 999)) return fail('Antall må være mellom 1 og 999.', $('#f-antall'));
+    if (!art) return fail('Velg hjort eller rådyr.');
+    if (art === 'Hjort') {
+      kat = readKat();
+      antall = Object.values(kat).reduce((a, b) => a + b, 0);
+      if (antall < 1) return fail('Angi antall for minst én av bukk, kolle, kalv eller ungdyr.', $('#f-k-bukk'));
+    } else {
+      antall = parseInt($('#f-antall').value, 10);
+      if (!(antall >= 1 && antall <= 99)) return fail('Antall rådyr må være mellom 1 og 99.', $('#f-antall'));
+    }
+    ui.save({ sisteArt: art });
     if (!tid) return fail('Velg dato og klokkeslett.', $('#f-tid'));
     errEl.hidden = true;
     const o = {
       id: d.id || uid(), eksempel: d.eksempel, registrert: d.registrert || new Date().toISOString(),
-      tid, art, antall, gikk: selection.gikk, vaer: selection.vaer, vind: selection.vind, sno: selection.sno,
+      tid, art, antall, kat, gikk: selection.gikk, vaer: selection.vaer, vind: selection.vind, sno: selection.sno,
       lat: Math.round(d.lat * 1e6) / 1e6, lon: Math.round(d.lon * 1e6) / 1e6,
       fra: d.fra ? { lat: Math.round(d.fra.lat * 1e6) / 1e6, lon: Math.round(d.fra.lon * 1e6) / 1e6, retning: Math.round(d.fra.retning), avstand: Math.round(d.fra.avstand) } : null,
       vaerdata: d.vaerdata || ''
@@ -1565,6 +1547,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
   document.addEventListener('keydown', e => {
     if (e.key !== 'Escape') return;
     if (state.mode === 'place') setMode('view');
+    else if (state.mode === 'move') endMove(false);
     else if (state.mode === 'edit') closeForm();
     else closePanels();
   });
@@ -1573,11 +1556,16 @@ input[type=number]{font-variant-numeric:tabular-nums}
 
   /* ================= Start ================= */
   (async function start() {
-    const h = (location.hash || '').replace('#', '');
-    setStyle(['a', 'b', 'c'].includes(h) ? h : (prefs.stil || 'a'));
+    initView();
     setMode('view');
     let data = readAll();
     if (data == null && !prefs.utenEksempler) { data = makeExamples(); writeAll(data); }
+    else if (Array.isArray(data) && data.some(o => o.eksempel && !String(o.id).startsWith('ex2-'))) {
+      // bytt ut eksempler fra forrige versjon (mange arter) med nye for hjort og rådyr
+      data = data.filter(o => !o.eksempel);
+      if (!prefs.utenEksempler) data = data.concat(makeExamples());
+      writeAll(data);
+    }
     state.obs = Array.isArray(data) ? data : [];
     if (sim.on) applySim(false);
     renderAll();
