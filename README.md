@@ -31,6 +31,8 @@ Appen kan installeres (manifest og ikoner i `docs/`). En service worker (`docs/s
 
 Observasjoner lagres bare i nettleseren på enheten. Værdata hentes direkte fra Open-Meteo (MET Nordic), eller via `getWeather` i `Code.gs` når siden kjøres i Apps Script.
 
+Snøforhold fylles ut fra NVEs snøkart (GridTimeSeries-API, temalag `sd` og `sdfsw`). Høyden for punktet hentes fra Kartverkets høyde-API (reserve: Open-Meteo). Ligger rutens snitthøyde mer enn 100 m fra punktets høyde, brukes ruten rundt som ligger nærmest i høyde. Regler: under 1 cm = Ingen, minst 2 cm nysnø siste døgn = Nysnø, under 10 cm = Flekkvis, ellers Dekket.
+
 ## Filer
 
 | Fil | Innhold |

@@ -383,7 +383,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
       <fieldset class="f"><legend>Dyret gikk mot</legend><div class="rose" id="f-gikk"></div></fieldset>
     </div>
 
-    <fieldset class="f"><legend>Snøforhold</legend><div class="chips" id="f-sno"></div></fieldset>
+    <fieldset class="f"><legend>Snøforhold <span class="auto" id="auto-sno" hidden>fra NVE</span></legend><div class="chips" id="f-sno"></div><p class="hint" id="sno-info" style="margin-top:6px"></p></fieldset>
 
     <div class="pos" id="f-pos"></div>
     <div><button class="chip" type="button" id="f-move">Endre posisjon med krysset</button></div>
@@ -919,6 +919,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
       el('p', { class: 'when', text: `${fmtTid(o.tid)} · ${ageText(o).toLowerCase()}` }),
       dl,
       o.vaerdata ? el('p', { class: 'src', text: o.vaerdata }) : null,
+      o.snodata ? el('p', { class: 'src', text: o.snodata }) : null,
       coords,
       el('p', { class: 'src', text: 'Norge i bilder åpner på stedet, og punktet kopieres. Lim det inn i søkefeltet der for å få en nål.' }),
       el('div', { class: 'btns' },
@@ -1390,7 +1391,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     box.querySelectorAll('[data-v]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.v === selection[field])));
   }
   chipGroup($('#f-vaer'), VAER, 'vaer', () => { state.touched.vaer = true; $('#auto-vaer').hidden = true; });
-  chipGroup($('#f-sno'), SNO, 'sno');
+  chipGroup($('#f-sno'), SNO, 'sno', () => { state.touched.sno = true; $('#auto-sno').hidden = true; });
   roseGroup($('#f-vind'), 'vind', ['Stille', 'Stille'], false, () => { state.touched.vind = true; $('#auto-vind').hidden = true; });
   roseGroup($('#f-gikk'), 'gikk', ['Ro', 'Sto i ro'], true);
   function cntRow(id, label) {
@@ -1685,8 +1686,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
     closePanels();
     map.closePopup();
     setMode('edit');
-    state.draft = { id: o.id || null, lat: o.lat, lon: o.lon, fra: o.fra ? Object.assign({}, o.fra) : null, vaerdata: o.vaerdata || '', eksempel: !!o.eksempel, registrert: o.registrert || null };
-    state.touched = { vaer: !isNew, vind: !isNew };
+    state.draft = { id: o.id || null, lat: o.lat, lon: o.lon, fra: o.fra ? Object.assign({}, o.fra) : null, vaerdata: o.vaerdata || '', snodata: o.snodata || '', eksempel: !!o.eksempel, registrert: o.registrert || null };
+    state.touched = { vaer: !isNew, vind: !isNew, sno: !isNew };
     $('#form-title').textContent = isNew ? 'Ny observasjon' : 'Rediger observasjon';
     const art0 = o.art ? canon(o.art) : (isNew ? (ui.load().sisteArt || '') : '');
     setArt(slot(art0) >= 0 ? art0 : '');
@@ -1695,7 +1696,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
     $('#f-antall').value = canon(o.art) === 'Rådyr' ? (o.antall || 1) : 1;
     $('#f-tid').value = o.tid || osloNow();
     setSel('vaer', o.vaer); setSel('vind', o.vind); setSel('gikk', o.gikk); setSel('sno', o.sno);
-    $('#auto-vaer').hidden = true; $('#auto-vind').hidden = true;
+    $('#auto-vaer').hidden = true; $('#auto-vind').hidden = true; $('#auto-sno').hidden = true;
+    $('#sno-info').textContent = o.snodata || '';
     $('#f-err').hidden = true;
 
     if (!isNew) { state.hiddenId = o.id; renderMarkers(); }
@@ -1723,7 +1725,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     if (state.draftMarker) { map.removeLayer(state.draftMarker); state.draftMarker = null; }
     if (state.draftLine) state.draftLine.clearLayers();
     state.draft = null;
-    state.wxSeq++;
+    state.wxSeq++; state.snoSeq = (state.snoSeq || 0) + 1;
     const had = state.hiddenId;
     state.hiddenId = null;
     $('#p-form').hidden = true;
@@ -1737,6 +1739,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
   async function fetchWeather() {
     const d = state.draft, tid = $('#f-tid').value;
     if (!d || !tid) return;
+    fetchSnow();
     const seq = ++state.wxSeq;
     setWx('loading', 'Henter værdata fra MET …');
     const w = await getWeather(d.lat, d.lon, tid);
@@ -1748,7 +1751,103 @@ input[type=number]{font-variant-numeric:tabular-nums}
     setWx('ok', w.summary);
   }
   $('#f-tid').addEventListener('change', scheduleWeather);
-  $('#wx-refresh').addEventListener('click', () => { state.touched = { vaer: false, vind: false }; fetchWeather(); });
+  $('#wx-refresh').addEventListener('click', () => { state.touched = { vaer: false, vind: false, sno: false }; fetchWeather(); });
+
+  /* ================= Snødata (NVE seNorge) i høyden der dyret sto ================= */
+  // Høyden for punktet hentes fra Kartverket (reserve: Open-Meteo). Snødybden hentes fra NVE for
+  // ruten punktet ligger i og rutene rundt; ligger rutens snitthøyde mer enn 100 m unna punktets
+  // høyde, brukes ruten som ligger nærmest i høyde.
+  const snowCache = new Map();
+  async function fetchJson(url, ms) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), ms || 12000);
+    try { const r = await fetch(url, { signal: ctl.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); }
+    finally { clearTimeout(timer); }
+  }
+  async function pointElevation(lat, lon) {
+    const u = toUTM33(lat, lon);
+    try {
+      const j = await fetchJson(`https://ws.geonorge.no/hoydedata/v1/punkt?nord=${Math.round(u.n)}&ost=${Math.round(u.e)}&koordsys=25833&geojson=false`);
+      const z = j && j.punkter && j.punkter[0] ? Number(j.punkter[0].z) : NaN;
+      if (isFinite(z)) return z;
+    } catch (e) { /* prøv reserve */ }
+    try {
+      const j = await fetchJson(`https://api.open-meteo.com/v1/elevation?latitude=${lat.toFixed(5)}&longitude=${lon.toFixed(5)}`);
+      const z = j && j.elevation ? Number(j.elevation[0]) : NaN;
+      if (isFinite(z)) return z;
+    } catch (e) { /* ingen høyde */ }
+    return null;
+  }
+  function toCm(v, unit) {
+    if (v == null) return null;
+    const u = String(unit || '').toLowerCase().trim();
+    if (u === 'mm') return v / 10;
+    if (u === 'm') return v * 100;
+    return v;   // NVE oppgir snødybde i cm
+  }
+  async function gts(x, y, day, theme) {
+    const j = await fetchJson(`https://gts.nve.no/api/GridTimeSeries/${Math.round(x)}/${Math.round(y)}/${day}/${day}/${theme}.json`);
+    const v = j && Array.isArray(j.Data) ? j.Data[0] : null;
+    const ok = v != null && v !== j.NoDataValue && isFinite(Number(v));
+    return { cm: ok ? toCm(Number(v), j.Unit) : null, alt: isFinite(Number(j.Altitude)) ? Number(j.Altitude) : null };
+  }
+  function snoFra(sdCm, nyCm) {
+    if (sdCm == null) return null;
+    if (sdCm < 1) return 'Ingen';
+    if (nyCm != null && nyCm >= 2) return 'Nysnø';
+    if (sdCm < 10) return 'Flekkvis';
+    return 'Dekket';
+  }
+  const cmTxt = v => (v < 10 ? deg(v, 1).replace(',0', '') : String(Math.round(v)));
+  async function getSnow(lat, lon, tid) {
+    if (!navigator.onLine) return { ok: false, message: 'Uten nett. Snødata fra NVE kan ikke hentes nå, så velg snøforhold selv.' };
+    const day = String(tid).slice(0, 10);
+    const key = [lat.toFixed(4), lon.toFixed(4), day].join('|');
+    if (snowCache.has(key)) return snowCache.get(key);
+    const u = toUTM33(lat, lon);
+    const elevP = pointElevation(lat, lon);
+    const cells = [];
+    [-1000, 0, 1000].forEach(dy => [-1000, 0, 1000].forEach(dx => cells.push({ x: u.e + dx, y: u.n + dy, center: !dx && !dy })));
+    const res = await Promise.allSettled(cells.map(c => gts(c.x, c.y, day, 'sd')));
+    const ok = [];
+    res.forEach((r, i) => { if (r.status === 'fulfilled' && r.value.cm != null) ok.push(Object.assign({}, cells[i], r.value)); });
+    if (!ok.length) {
+      const allFailed = res.every(r => r.status === 'rejected');
+      return { ok: false, message: allFailed ? 'Kunne ikke hente snødata fra NVE. Velg snøforhold selv.' : 'NVE har ikke snødata for denne datoen. Velg snøforhold selv.' };
+    }
+    const elev = await elevP;
+    const center = ok.find(c => c.center) || ok[0];
+    let best = center, iHoyden = false;
+    if (elev != null && ok.some(c => c.alt != null)) {
+      iHoyden = true;
+      if (center.alt == null || Math.abs(center.alt - elev) > 100) {
+        best = ok.filter(c => c.alt != null).reduce((a, c) => (Math.abs(c.alt - elev) < Math.abs(a.alt - elev) ? c : a));
+      }
+    }
+    let ny = null;
+    try { ny = (await gts(best.x, best.y, day, 'sdfsw')).cm; } catch (e) { /* uten nysnøtall */ }
+    const sno = snoFra(best.cm, ny);
+    const d = new Date(day + 'T12:00:00Z');
+    const dagTxt = `${d.getUTCDate()}. ${MND[d.getUTCMonth()]}`;
+    const parts = [`snødybde ca. ${cmTxt(best.cm)} cm`];
+    if (ny != null && ny > 0) parts.push(`${cmTxt(ny)} cm nysnø siste døgn`);
+    const out = { ok: true, sno, summary: `NVE ${dagTxt}: ${parts.join(', ')} (${iHoyden ? 'beregnet for høyden der dyret sto' : 'for ruten punktet ligger i'})` };
+    snowCache.set(key, out);
+    return out;
+  }
+  async function fetchSnow() {
+    const d = state.draft, tid = $('#f-tid').value;
+    if (!d || !tid) return;
+    const seq = state.snoSeq = (state.snoSeq || 0) + 1;
+    $('#sno-info').textContent = 'Henter snødata fra NVE …';
+    let r;
+    try { r = await getSnow(d.lat, d.lon, tid); } catch (e) { r = { ok: false, message: 'Kunne ikke hente snødata fra NVE. Velg snøforhold selv.' }; }
+    if (seq !== state.snoSeq || !state.draft) return;
+    if (!r.ok) { d.snodata = ''; $('#sno-info').textContent = r.message; return; }
+    if (!state.touched.sno && r.sno) { setSel('sno', r.sno); $('#auto-sno').hidden = false; }
+    d.snodata = r.summary;
+    $('#sno-info').textContent = r.summary;
+  }
 
   $('#obs-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -1776,7 +1875,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
       tid, art, antall, kat, gikk: selection.gikk, vaer: selection.vaer, vind: selection.vind, sno: selection.sno,
       lat: Math.round(d.lat * 1e6) / 1e6, lon: Math.round(d.lon * 1e6) / 1e6,
       fra: d.fra ? { lat: Math.round(d.fra.lat * 1e6) / 1e6, lon: Math.round(d.fra.lon * 1e6) / 1e6, retning: Math.round(d.fra.retning), avstand: Math.round(d.fra.avstand) } : null,
-      vaerdata: d.vaerdata || ''
+      vaerdata: d.vaerdata || '',
+      snodata: d.snodata || ''
     };
     await Store.save(o);
     const i = state.obs.findIndex(x => x.id === o.id);
