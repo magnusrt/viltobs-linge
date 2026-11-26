@@ -18,7 +18,7 @@ Delt kart for å registrere hvor det er observert vilt ved Linge i Valldal (Fjor
 `docs/index.html` er en frittstående versjon for å teste utforming og funksjoner. Den publiseres med GitHub Pages på https://magnusrt.github.io/viltobs-linge/
 
 - Design «Kartblad» med trådkors i midten og koordinatlinje i UTM 33.
-- Nye observasjoner plasseres bare med krysset: flytt kartet og trykk «Legg til ved krysset». Trykk i kartet flytter krysset dit.
+- Nye observasjoner plasseres med krysset (flytt kartet og trykk «Legg til ved krysset»), eller med «Avstand fra meg»: skriv inn avstanden fra avstandsmåleren, så tegnes en sirkel rundt deg, og et trykk i kartet legger punktet på sirkelen i den retningen.
 - Hjort registreres med antall bukk, kolle, kalv og ungdyr. Rådyr registreres med totalt antall.
 - Egne stedsnavn: trykk «+ Navn» og lagre et navn ved krysset. Navnene kan endres, flyttes med krysset og slettes, og skjules under kartlag.
 - Min posisjon (GPS), med testmodus som simulerer at du står på Linge (N 6 931 658 Ø 98 135). Punktet kan dras.

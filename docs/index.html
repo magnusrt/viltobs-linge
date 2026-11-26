@@ -167,6 +167,13 @@ input[type=number]{font-variant-numeric:tabular-nums}
 .counts .total{grid-column:1/-1;margin:0;color:var(--ink-2);font-size:14px}
 .counts .total b{color:var(--ink);font-variant-numeric:tabular-nums}
 .banner .go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.banner .go:disabled{opacity:.45;cursor:default}
+.range{display:grid;gap:6px}
+.range .unit{max-width:200px}
+.range input{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.range .hint{font-size:14px;color:var(--ink)}
+.ranging .crosshair{display:none!important}
+.ranging .banner{top:calc(var(--top) + 10px + env(safe-area-inset-top,0px));bottom:auto}
 .editing .crosshair,.popup-open .crosshair{display:none!important}
 [data-style="b"] .naming .crosshair{width:48px;height:48px;margin:-24px 0 0 -24px}
 .naming .crosshair::after{content:"";position:absolute;inset:13px;border:2px solid #fff;border-radius:50%}
@@ -335,8 +342,13 @@ input[type=number]{font-variant-numeric:tabular-nums}
 
 <div class="banner" id="banner" hidden>
   <p id="banner-text">Flytt kartet så krysset står der dyret ble sett</p>
+  <div class="range" id="range-ui" hidden>
+    <div class="unit"><input id="range-dist" type="number" inputmode="numeric" min="1" max="5000" step="1" placeholder="Avstand" enterkeyhint="done" aria-label="Avstand fra deg i meter"><span>m</span></div>
+    <p class="hint" id="range-info"></p>
+  </div>
   <div class="btns">
     <button type="button" class="go" id="pl-cross">Legg til ved krysset</button>
+    <button type="button" id="pl-range">Avstand fra meg</button>
     <button type="button" class="cancel" id="pl-cancel">Avbryt</button>
   </div>
 </div>
@@ -931,7 +943,10 @@ input[type=number]{font-variant-numeric:tabular-nums}
       if (o.id === state.hiddenId || !isFinite(o.lat) || !isFinite(o.lon)) return;
       const m = L.marker([o.lat, o.lon], { icon: markerIcon(o), title: `${o.art}, ${fmtTid(o.tid)}, ${ageText(o).toLowerCase()}`, riseOnHover: true })
         .bindPopup(() => popupEl(o), { maxWidth: 300, autoPanPaddingTopLeft: [10, 150], autoPanPaddingBottomRight: [10, 110] });
-      m.on('click', e => { if (isPlacing()) { m.closePopup(); map.panTo(e.latlng); } });
+      m.on('click', e => {
+        if (state.mode === 'range') { m.closePopup(); setRangeDir(e.latlng); }
+        else if (isPlacing()) { m.closePopup(); map.panTo(e.latlng); }
+      });
       m.on('popupopen', () => { if (o.fra) sightLine(sightLayer, Object.assign({ to: [o.lat, o.lon] }, o.fra)); });
       m.on('popupclose', () => sightLayer.clearLayers());
       m.addTo(markerLayer);
@@ -1404,24 +1419,36 @@ input[type=number]{font-variant-numeric:tabular-nums}
     state.mode = m;
     const placing = m === 'place' || m === 'move' || m === 'stedmove';
     document.body.classList.toggle('placing', placing);
+    document.body.classList.toggle('ranging', m === 'range');
     document.body.classList.toggle('editing', m === 'edit');
-    $('#banner').hidden = !placing;
+    $('#banner').hidden = !(placing || m === 'range');
     $('#t-new').hidden = m !== 'view';
-    $('#banner-text').textContent = m === 'stedmove' ? `Flytt kartet så krysset står der «${state.stedMove ? state.stedMove.navn : ''}» skal ligge`
+    $('#banner-text').textContent = m === 'range' ? 'Avstand fra kikkerten'
+      : m === 'stedmove' ? `Flytt kartet så krysset står der «${state.stedMove ? state.stedMove.navn : ''}» skal ligge`
       : m === 'move' ? 'Flytt kartet så krysset står på den nye posisjonen' : 'Flytt kartet så krysset står der dyret ble sett';
-    $('#pl-cross').textContent = m === 'place' ? 'Legg til ved krysset' : 'Bruk denne posisjonen';
+    $('#pl-cross').textContent = m === 'place' ? 'Legg til ved krysset' : m === 'range' ? 'Bruk dette punktet' : 'Bruk denne posisjonen';
+    $('#range-ui').hidden = m !== 'range';
+    $('#pl-range').hidden = m !== 'place';
+    $('#pl-cross').disabled = m === 'range' && !range.point;
     if (placing) updateReadout();
   }
   $('#t-new').addEventListener('click', () => { closePanels(); map.closePopup(); setMode('place'); });
   function isPlacing() { return state.mode === 'place' || state.mode === 'move' || state.mode === 'stedmove'; }
   $('#pl-cancel').addEventListener('click', () => {
     if (state.mode === 'move') endMove(false);
+    else if (state.mode === 'range') { endRange(); setMode('view'); }
     else { state.stedMove = null; setMode('view'); }
   });
   $('#pl-cross').addEventListener('click', () => {
     const c = map.getCenter();
     if (state.mode === 'move') endMove(true, c);
     else if (state.mode === 'stedmove') endStedMove(c);
+    else if (state.mode === 'range') {
+      if (!range.point) return;
+      const pt = range.point;
+      endRange();
+      openForm({ lat: pt[0], lon: pt[1] });
+    }
     else openForm({ lat: c.lat, lon: c.lng });
   });
 
@@ -1442,7 +1469,10 @@ input[type=number]{font-variant-numeric:tabular-nums}
         icon: L.divIcon({ html: label, className: 'stedmk', iconSize: [8, 8], iconAnchor: [4, 4], popupAnchor: [0, -8] }),
         zIndexOffset: -200, title: st.navn
       }).bindPopup(() => stedPopup(st), { maxWidth: 280, autoPanPaddingTopLeft: [10, 150], autoPanPaddingBottomRight: [10, 110] });
-      m.on('click', e => { if (isPlacing()) { m.closePopup(); map.panTo(e.latlng); } });
+      m.on('click', e => {
+        if (state.mode === 'range') { m.closePopup(); setRangeDir(e.latlng); }
+        else if (isPlacing()) { m.closePopup(); map.panTo(e.latlng); }
+      });
       stedLayer.addLayer(m);
     });
   }
@@ -1533,7 +1563,74 @@ input[type=number]{font-variant-numeric:tabular-nums}
     setMode('view');
   }
   // Trykk i kartet flytter krysset dit
-  map.on('click', e => { if (isPlacing()) map.panTo(e.latlng); });
+  map.on('click', e => {
+    if (state.mode === 'range') setRangeDir(e.latlng);
+    else if (isPlacing()) map.panTo(e.latlng);
+  });
+
+  /* ----- Avstand fra meg (avstandsmåler i kikkerten) ----- */
+  const range = { center: null, dist: 0, brg: null, point: null, layer: L.layerGroup() };
+  async function startRange() {
+    const b = $('#pl-range');
+    b.disabled = true; b.textContent = 'Finner posisjonen din …';
+    let p;
+    try { p = await whenGps(); } catch (e) { return; } finally { b.disabled = false; b.textContent = 'Avstand fra meg'; }
+    range.center = p.slice(); range.dist = 0; range.brg = null; range.point = null;
+    range.layer.addTo(map);
+    $('#range-dist').value = '';
+    setMode('range');
+    updateRangeInfo();
+    map.setView(range.center, Math.max(map.getZoom(), 15));
+    setTimeout(() => { try { $('#range-dist').focus(); } catch (e) { /* ignorer */ } }, 80);
+  }
+  function endRange() {
+    range.layer.clearLayers();
+    if (map.hasLayer(range.layer)) map.removeLayer(range.layer);
+    range.point = null; range.brg = null;
+  }
+  function drawRange() {
+    range.layer.clearLayers();
+    if (!range.center || !(range.dist > 0)) return;
+    range.layer.addLayer(L.circle(range.center, { radius: range.dist, color: '#111', weight: 5, opacity: .5, fill: false, interactive: false }));
+    range.layer.addLayer(L.circle(range.center, { radius: range.dist, color: '#fff', weight: 2.5, dashArray: '8 6', fill: false, interactive: false }));
+    if (range.point) {
+      range.layer.addLayer(L.polyline([range.center, range.point], { color: '#fff', weight: 2, dashArray: '4 6', interactive: false }));
+      range.layer.addLayer(L.marker(range.point, { icon: markerIcon({}, true), interactive: false, keyboard: false, zIndexOffset: 1000 }));
+    }
+  }
+  function updateRangeInfo() {
+    const info = !range.dist ? 'Skriv inn avstanden i meter. Da tegnes en sirkel rundt deg.'
+      : !range.point ? `Sirkel på ${range.dist} m rundt deg. Trykk i kartet i retningen dyret står.`
+      : `Retning ${Math.round(range.brg)}° (${DIRS[Math.round(range.brg / 45) % 8]}), ${range.dist} m fra deg. Trykk på nytt for å justere.`;
+    $('#range-info').textContent = info;
+    $('#pl-cross').disabled = state.mode === 'range' && !range.point;
+  }
+  function fitRange() {
+    if (!range.center || !range.dist) return;
+    const top = $('#banner').getBoundingClientRect().bottom + 16;
+    map.fitBounds(L.latLng(range.center[0], range.center[1]).toBounds(range.dist * 2.2),
+      { paddingTopLeft: [24, Math.max(80, top)], paddingBottomRight: [24, 110], maxZoom: 17 });
+  }
+  let rangeTimer = null;
+  $('#range-dist').addEventListener('input', () => {
+    const v = parseInt($('#range-dist').value, 10);
+    range.dist = v >= 1 && v <= 5000 ? v : 0;
+    if (range.point && range.dist && range.brg != null) range.point = dest(range.center[0], range.center[1], range.brg, range.dist);
+    if (!range.dist) range.point = null;
+    drawRange(); updateRangeInfo();
+    clearTimeout(rangeTimer); rangeTimer = setTimeout(fitRange, 600);
+  });
+  $('#range-dist').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); fitRange(); } });
+  function setRangeDir(latlng) {
+    if (!range.dist) { toast('Skriv inn avstanden først.'); $('#range-dist').focus(); return; }
+    const bd = brgDist(range.center[0], range.center[1], latlng.lat, latlng.lng);
+    if (bd.dist < 1) return;
+    range.brg = bd.brg;
+    range.point = dest(range.center[0], range.center[1], bd.brg, range.dist);
+    try { $('#range-dist').blur(); } catch (e) { /* ignorer */ }
+    drawRange(); updateRangeInfo();
+  }
+  $('#pl-range').addEventListener('click', startRange);
 
   function startMove() {
     const d = state.draft;
@@ -1698,6 +1795,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     if (state.mode === 'place') setMode('view');
     else if (state.mode === 'move') endMove(false);
     else if (state.mode === 'stedmove') { state.stedMove = null; setMode('view'); }
+    else if (state.mode === 'range') { endRange(); setMode('view'); }
     else if (state.mode === 'edit') closeForm();
     else closePanels();
   });
