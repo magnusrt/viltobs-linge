@@ -173,7 +173,16 @@ input[type=number]{font-variant-numeric:tabular-nums}
 .range input{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
 .range .hint{font-size:14px;color:var(--ink)}
 .ranging .crosshair{display:none!important}
-.ranging .banner{top:calc(var(--top) + 10px + env(safe-area-inset-top,0px));bottom:auto}
+.ranging .banner{top:calc(var(--top) + 8px + env(safe-area-inset-top,0px));bottom:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;padding:8px}
+.ranging #banner-text{display:none}
+.ranging .toast{top:calc(var(--top) + 110px + env(safe-area-inset-top,0px))}
+.ranging #range-ui,.ranging .banner .btns{display:contents}
+.ranging .range .unit{flex:0 0 104px;max-width:none}
+.ranging .range input{min-height:40px;padding:6px 28px 6px 10px;font-size:18px}
+.ranging .banner button{min-height:40px;padding:6px 12px;font-size:14px}
+.ranging #pl-cross{order:2;flex:1 1 auto}
+.ranging .banner .cancel{order:3;margin-left:0}
+.ranging .range .hint{order:4;flex:1 1 100%;margin:0;font-size:12.5px;line-height:1.35}
 .editing .crosshair,.popup-open .crosshair{display:none!important}
 [data-style="b"] .naming .crosshair{width:48px;height:48px;margin:-24px 0 0 -24px}
 .naming .crosshair::after{content:"";position:absolute;inset:13px;border:2px solid #fff;border-radius:50%}
@@ -343,7 +352,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
 <div class="banner" id="banner" hidden>
   <p id="banner-text">Flytt kartet så krysset står der dyret ble sett</p>
   <div class="range" id="range-ui" hidden>
-    <div class="unit"><input id="range-dist" type="number" inputmode="numeric" min="1" max="5000" step="1" placeholder="Avstand" enterkeyhint="done" aria-label="Avstand fra deg i meter"><span>m</span></div>
+    <div class="unit"><input id="range-dist" type="number" inputmode="numeric" min="1" max="5000" step="1" placeholder="Meter" enterkeyhint="done" aria-label="Avstand fra deg i meter"><span>m</span></div>
     <p class="hint" id="range-info"></p>
   </div>
   <div class="btns">
@@ -1427,7 +1436,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     $('#banner-text').textContent = m === 'range' ? 'Avstand fra kikkerten'
       : m === 'stedmove' ? `Flytt kartet så krysset står der «${state.stedMove ? state.stedMove.navn : ''}» skal ligge`
       : m === 'move' ? 'Flytt kartet så krysset står på den nye posisjonen' : 'Flytt kartet så krysset står der dyret ble sett';
-    $('#pl-cross').textContent = m === 'place' ? 'Legg til ved krysset' : m === 'range' ? 'Bruk dette punktet' : 'Bruk denne posisjonen';
+    $('#pl-cross').textContent = m === 'place' ? 'Legg til ved krysset' : m === 'range' ? 'Bruk punktet' : 'Bruk denne posisjonen';
     $('#range-ui').hidden = m !== 'range';
     $('#pl-range').hidden = m !== 'place';
     $('#pl-cross').disabled = m === 'range' && !range.point;
@@ -1600,9 +1609,9 @@ input[type=number]{font-variant-numeric:tabular-nums}
     }
   }
   function updateRangeInfo() {
-    const info = !range.dist ? 'Skriv inn avstanden i meter. Da tegnes en sirkel rundt deg.'
-      : !range.point ? `Sirkel på ${range.dist} m rundt deg. Trykk i kartet i retningen dyret står.`
-      : `Retning ${Math.round(range.brg)}° (${DIRS[Math.round(range.brg / 45) % 8]}), ${range.dist} m fra deg. Trykk på nytt for å justere.`;
+    const info = !range.dist ? 'Avstand fra kikkerten i meter. Sirkelen tegnes rundt deg.'
+      : !range.point ? 'Trykk i kartet i retningen dyret står.'
+      : `${Math.round(range.brg)}° (${DIRS[Math.round(range.brg / 45) % 8]}), ${range.dist} m. Trykk på nytt for å justere.`;
     $('#range-info').textContent = info;
     $('#pl-cross').disabled = state.mode === 'range' && !range.point;
   }
