@@ -413,9 +413,9 @@ input[type=number]{font-variant-numeric:tabular-nums}
   </div>
   <h3>Testing</h3>
   <div class="testrow">
-    <button class="toggle" type="button" id="sim-toggle" aria-pressed="false"><span>Simuler at jeg står på gården Linge</span><span class="sw2" aria-hidden="true"></span></button>
+    <button class="toggle" type="button" id="sim-toggle" aria-pressed="false"><span>Simuler at jeg står på Linge</span><span class="sw2" aria-hidden="true"></span></button>
     <p class="hint" id="sim-text"></p>
-    <div><button class="chip" type="button" id="sim-reset">Flytt tilbake til gården Linge</button></div>
+    <div><button class="chip" type="button" id="sim-reset">Flytt tilbake til startpunktet</button></div>
     <p class="hint" id="ex-text"></p>
     <div><button class="chip" type="button" id="ex-toggle"></button></div>
   </div>
@@ -453,7 +453,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
 
   /* ================= Oppsett ================= */
   const START = { lat: 62.2960, lon: 7.2000, zoom: 14 };   // Linge, Valldal
-  const LINGE_GARD = [62.2872, 7.2060];                     // omtrentlig: litt øst for ferjekaia, kan dras
+  const SIM_START = [62.299126, 7.237897];                  // valgt startpunkt: N 6 931 658  Ø 98 135 (UTM 33)
+  const SIM_VER = 2;                                        // øk når startpunktet endres, så gamle lagrede punkt erstattes
   const SPECIES = [['Hjort', 'Hj'], ['Rådyr', 'Rå']];
   const MARK = ['#257de0', '#f47230'];
   const HJORT_KAT = [['bukk', 'Bukk'], ['kolle', 'Kolle'], ['kalv', 'Kalv'], ['ungdyr', 'Ungdyr']];
@@ -1009,7 +1010,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     $('#ex-toggle').textContent = nEx ? 'Fjern eksempler' : 'Legg inn eksempler';
     $('#sim-toggle').setAttribute('aria-pressed', String(sim.on));
     $('#sim-text').textContent = sim.on
-      ? 'Appen later som du står på det oransje punktet. Dra punktet i kartet for å flytte deg. «Der jeg står» og «Retning og avstand fra meg» bruker denne posisjonen.'
+      ? 'Appen later som du står på det oransje punktet. Dra punktet i kartet for å flytte deg. «Min posisjon» og avstanden «Fra deg nå» i observasjonene bruker denne posisjonen.'
       : 'Av. Appen bruker den ekte posisjonen fra enheten.';
     $('#sim-reset').hidden = !sim.on;
   }
@@ -1169,9 +1170,9 @@ input[type=number]{font-variant-numeric:tabular-nums}
 
   /* ================= GPS ================= */
   $('#sim-toggle').addEventListener('click', () => setSim(!sim.on));
-  $('#sim-reset').addEventListener('click', () => { sim.pos = LINGE_GARD.slice(); ui.save({ simPos: sim.pos }); applySim(true); toast('Flyttet tilbake til gården Linge'); });
+  $('#sim-reset').addEventListener('click', () => { sim.pos = SIM_START.slice(); ui.save({ simPos: sim.pos, simVer: SIM_VER }); applySim(true); toast('Flyttet tilbake til startpunktet'); });
   const gps = { watch: null, pos: null, acc: null, marker: null, circle: null, centerNext: false, waiting: [] };
-  const sim = { on: prefs.sim !== false, pos: Array.isArray(prefs.simPos) ? prefs.simPos : LINGE_GARD.slice() };
+  const sim = { on: prefs.sim !== false, pos: (prefs.simVer === SIM_VER && Array.isArray(prefs.simPos)) ? prefs.simPos : SIM_START.slice() };
 
   function clearMe() {
     if (gps.marker) { map.removeLayer(gps.marker); gps.marker = null; }
@@ -1195,7 +1196,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
       });
       gps.marker.on('dragend', () => {
         sim.pos = gps.pos.slice();
-        ui.save({ simPos: sim.pos });
+        ui.save({ simPos: sim.pos, simVer: SIM_VER });
         toast('Den simulerte posisjonen er flyttet');
       });
     }
@@ -1211,7 +1212,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
   function setSim(on) {
     sim.on = on;
     ui.save({ sim: on });
-    if (on) { applySim(true); toast('Du er nå simulert på gården Linge'); }
+    if (on) { applySim(true); toast('Du er nå simulert på Linge'); }
     else { clearMe(); gps.pos = null; setGpsState('off'); toast('Simulert posisjon er slått av'); }
     renderStatus();
     if (state.panel === 'p-filter') renderFilter();
