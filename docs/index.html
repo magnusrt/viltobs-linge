@@ -871,11 +871,20 @@ input[type=number]{font-variant-numeric:tabular-nums}
       dl,
       o.vaerdata ? el('p', { class: 'src', text: o.vaerdata }) : null,
       coords,
+      el('p', { class: 'src', text: 'Norge i bilder åpner på stedet, og punktet kopieres. Lim det inn i søkefeltet der for å få en nål.' }),
       el('div', { class: 'btns' },
-        el('a', { href: nibUrl(o), target: '_blank', rel: 'noopener', text: 'Norge i bilder ↗' }),
+        el('a', { href: nibUrl(o), target: '_blank', rel: 'noopener', text: 'Norge i bilder ↗', onclick: () => copyForNib(o) }),
         copy,
         el('button', { type: 'button', text: 'Rediger', onclick: () => { map.closePopup(); openForm(o); } }),
         del));
+  }
+
+  // Norge i bilder tar ikke imot en markør i lenken, men søket godtar «breddegrad, lengdegrad»
+  function copyForNib(o) {
+    const txt = `${o.lat.toFixed(5)}, ${o.lon.toFixed(5)}`;
+    const done = () => toast(`Punktet ${txt} er kopiert. Lim det inn i søkefeltet i Norge i bilder.`);
+    const fail = () => toast(`Kopiering virket ikke. Skriv ${txt} i søkefeltet i Norge i bilder.`, true);
+    try { navigator.clipboard.writeText(txt).then(done, fail); } catch (e) { fail(); }
   }
 
   function renderMarkers() {
