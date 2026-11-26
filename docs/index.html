@@ -1924,7 +1924,11 @@ input[type=number]{font-variant-numeric:tabular-nums}
       writeAll(data);
     }
     state.obs = Array.isArray(data) ? data : [];
-    if (sim.on) applySim(false);
+    // Kartet starter der du er: på den simulerte posisjonen, eller på ekte GPS hvis posisjon allerede er tillatt
+    if (sim.on) { applySim(false); map.setView(sim.pos, START.zoom, { animate: false }); }
+    else if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then(p => { if (p.state === 'granted') startGps(true); }).catch(() => { /* bruk standardutsnittet */ });
+    }
     renderSteder();
     renderAll();
     // aldersringene oppdateres hver halvtime
