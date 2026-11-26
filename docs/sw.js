@@ -3,7 +3,7 @@
  * - Kartbilder du har sett lagres på enheten og brukes når de finnes (maks MAX_TILES).
  * - Værdata (Open-Meteo) hentes alltid fra nettet og lagres ikke her.
  */
-const SHELL = 'viltobs-shell-v2';
+const SHELL = 'viltobs-shell-v3';
 const TILES = 'viltobs-tiles-v1';
 const MAX_TILES = 4000;
 const NAV_TIMEOUT_MS = 5000;

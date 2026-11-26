@@ -23,6 +23,7 @@ Delt kart for å registrere hvor det er observert vilt ved Linge i Valldal (Fjor
 - Egne stedsnavn: trykk «+ Navn» og lagre et navn ved krysset. Navnene kan endres, flyttes med krysset og slettes, og skjules under kartlag.
 - Min posisjon (GPS), med testmodus som simulerer at du står på gården Linge. Punktet kan dras.
 - Filter per art og periode, og retningen dyret gikk vist som pil på markøren.
+- Alder: den hvite ringen rundt en observasjon tømmes med klokka fra ny til 90 dager gammel. Eldre observasjoner har ingen ring. Alderen står også som tekst i observasjonen og listen.
 - Statistikk: hjort etter kategori med kalv per kolle og kolle per bukk, observasjoner per måned og per time på døgnet.
 - Merkede eksempelobservasjoner som kan fjernes.
 

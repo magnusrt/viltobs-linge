@@ -187,6 +187,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
 .list .a{font-family:var(--display);font-weight:600;font-size:18px;line-height:1.15}
 .list .m{color:var(--ink-2);font-size:13px;grid-column:2}
 .list .t{font-variant-numeric:tabular-nums;font-size:13.5px;color:var(--ink-2);grid-row:1;grid-column:3;text-align:right}
+.list .age{font-size:12.5px;color:var(--ink-2);grid-row:2;grid-column:3;text-align:right;white-space:nowrap}
 .ex{font-size:11px;font-weight:600;color:var(--ink-2);border:1px solid var(--line-soft);border-radius:999px;padding:0 6px;margin-left:6px;vertical-align:2px;font-family:var(--body);letter-spacing:0}
 .empty{color:var(--ink-2);line-height:1.5;margin:6px 0 0;max-width:36ch}
 
@@ -205,7 +206,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
 .mk{background:none;border:0}
 .mk svg{display:block;overflow:visible;filter:drop-shadow(0 1px 3px rgba(0,0,0,.55))}
 .mk text{font:700 11.5px/1 var(--display);letter-spacing:.02em}
-.mk .badge{position:absolute;top:-2px;right:-4px;font:600 11px/1 var(--body);background:#111;color:#fff;border:1.5px solid #fff;border-radius:999px;padding:2px 5px;font-variant-numeric:tabular-nums}
+.mk .badge{position:absolute;transform:translate(-50%,-50%);font:600 11px/1 var(--body);background:#111;color:#fff;border:1.5px solid #fff;border-radius:999px;padding:2px 5px;font-variant-numeric:tabular-nums}
 .me{background:none;border:0}
 .me i{position:absolute;inset:6px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px #111,0 0 0 6px rgba(255,255,255,.65),0 2px 8px rgba(0,0,0,.5)}
 .me i::after{content:"";position:absolute;inset:4px;border-radius:50%;background:#111}
@@ -779,20 +780,55 @@ input[type=number]{font-variant-numeric:tabular-nums}
   map.on('popupopen', () => document.body.classList.add('popup-open'));
   map.on('popupclose', () => document.body.classList.remove('popup-open'));
 
+  // Aldersring: hel hvit ring når observasjonen er ny. Den hvite delen tømmes med klokka
+  // og er borte etter AGE_DAYS dager. Eldre observasjoner vises uten ring.
+  const AGE_DAYS = 90;
+  function ageDays(o) { const t = osloEpoch(o.tid); return isFinite(t) ? Math.max(0, (Date.now() - t) / 864e5) : Infinity; }
+  function ageText(o) {
+    const t = osloEpoch(o.tid);
+    if (!isFinite(t)) return '';
+    const ms = Date.now() - t;
+    if (ms < 0) return 'Fram i tid';
+    const h = ms / 3600e3, d = ms / 864e5;
+    if (h < 1) return 'Under en time siden';
+    if (h < 24) return `${Math.floor(h)} ${Math.floor(h) === 1 ? 'time' : 'timer'} siden`;
+    if (d < 14) return `${Math.floor(d)} ${Math.floor(d) === 1 ? 'dag' : 'dager'} siden`;
+    if (d < 60) return `${Math.floor(d / 7)} uker siden`;
+    if (d < 365) return `${Math.floor(d / 30.44)} måneder siden`;
+    const y = Math.floor(d / 365.25);
+    return `${y} år siden`;
+  }
   function markerIcon(o, draft) {
-    const col = draft ? 'var(--brand-draft, #1E3B2F)' : markColor(o.art);
-    const svg = sv('svg', { width: 44, height: 44, viewBox: '-22 -22 44 44' });
+    const col = draft ? '#1E3B2F' : markColor(o.art);
+    const svg = sv('svg', { width: 56, height: 56, viewBox: '-28 -28 56 56' });
     const d = dirDeg(o.gikk);
     if (!draft && d != null) {
       svg.append(sv('g', { transform: `rotate(${d})` },
-        sv('path', { d: 'M0,-21 L7,-11 L-7,-11 Z', fill: col, stroke: '#fff', 'stroke-width': 1.6, 'stroke-linejoin': 'round' })));
+        sv('path', { d: 'M0,-26 L6.5,-18 L-6.5,-18 Z', fill: col, stroke: '#fff', 'stroke-width': 1.6, 'stroke-linejoin': 'round' })));
     }
-    svg.append(sv('circle', { r: 13, fill: draft ? '#1E3B2F' : col, stroke: '#fff', 'stroke-width': 2.5, 'stroke-dasharray': draft ? '4 3' : null }));
-    if (!draft && o.gikk === 'Ro') svg.append(sv('circle', { r: 17.5, fill: 'none', stroke: '#fff', 'stroke-width': 1.5, 'stroke-dasharray': '2 3' }));
+    if (draft) {
+      svg.append(sv('circle', { r: 13, fill: col, stroke: '#fff', 'stroke-width': 2.5, 'stroke-dasharray': '4 3' }));
+    } else {
+      svg.append(sv('circle', { r: 13, fill: col, stroke: 'rgba(0,0,0,.35)', 'stroke-width': 1 }));
+      const f = ageDays(o) / AGE_DAYS;
+      if (f < 1) {
+        const R = 14.6, C = 2 * Math.PI * R;
+        svg.append(
+          sv('circle', { r: R, fill: 'none', stroke: 'rgba(255,255,255,.3)', 'stroke-width': 3.2 }),
+          sv('circle', { r: R, fill: 'none', stroke: '#fff', 'stroke-width': 3.2, transform: 'rotate(-90)',
+            'stroke-dasharray': `${((1 - f) * C).toFixed(2)} ${C.toFixed(2)}`, 'stroke-dashoffset': (-f * C).toFixed(2) }));
+      }
+      if (o.gikk === 'Ro') svg.append(sv('circle', { r: 20.5, fill: 'none', stroke: '#fff', 'stroke-width': 1.5, 'stroke-dasharray': '2 3' }));
+    }
     svg.append(sv('text', { 'text-anchor': 'middle', y: 4, fill: draft ? '#fff' : inkOn(o.art) }, draft ? '+' : abbr(o.art)));
-    const wrap = el('div', { style: 'position:relative;width:44px;height:44px' }, svg);
-    if (!draft && o.antall > 1) wrap.append(el('span', { class: 'badge', text: String(o.antall) }));
-    return L.divIcon({ html: wrap, className: 'mk', iconSize: [44, 44], iconAnchor: [22, 22], popupAnchor: [0, -16] });
+    const wrap = el('div', { style: 'position:relative;width:56px;height:56px' }, svg);
+    if (!draft && o.antall > 1) {
+      // tallbrikken legges på motsatt side av retningspilen
+      const a = ((d != null ? d + 180 : 45) % 360) * RAD;
+      const bx = 28 + 19 * Math.sin(a), by = 28 - 19 * Math.cos(a);
+      wrap.append(el('span', { class: 'badge', text: String(o.antall), style: `left:${bx.toFixed(1)}px;top:${by.toFixed(1)}px` }));
+    }
+    return L.divIcon({ html: wrap, className: 'mk', iconSize: [56, 56], iconAnchor: [28, 28], popupAnchor: [0, -18] });
   }
   const observerIcon = () => L.divIcon({ html: '<i></i>', className: 'obsv', iconSize: [12, 12], iconAnchor: [6, 6] });
 
@@ -867,7 +903,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     const dl = el('dl', null, rows.map(([k, v]) => [el('dt', { text: k }), el('dd', { text: v })]));
     return el('div', { class: 'pp' },
       el('h4', null, el('span', { class: 'sw', style: `background:${markColor(o.art)}` }), o.art, o.eksempel ? el('span', { class: 'ex', text: 'Eksempel' }) : null),
-      el('p', { class: 'when', text: fmtTid(o.tid) }),
+      el('p', { class: 'when', text: `${fmtTid(o.tid)} · ${ageText(o).toLowerCase()}` }),
       dl,
       o.vaerdata ? el('p', { class: 'src', text: o.vaerdata }) : null,
       coords,
@@ -892,7 +928,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     markers.clear();
     filtered().forEach(o => {
       if (o.id === state.hiddenId || !isFinite(o.lat) || !isFinite(o.lon)) return;
-      const m = L.marker([o.lat, o.lon], { icon: markerIcon(o), title: `${o.art}, ${fmtTid(o.tid)}`, riseOnHover: true })
+      const m = L.marker([o.lat, o.lon], { icon: markerIcon(o), title: `${o.art}, ${fmtTid(o.tid)}, ${ageText(o).toLowerCase()}`, riseOnHover: true })
         .bindPopup(() => popupEl(o), { maxWidth: 300, autoPanPaddingTopLeft: [10, 150], autoPanPaddingBottomRight: [10, 110] });
       m.on('click', e => { if (isPlacing()) { m.closePopup(); map.panTo(e.latlng); } });
       m.on('popupopen', () => { if (o.fra) sightLine(sightLayer, Object.assign({ to: [o.lat, o.lon] }, o.fra)); });
@@ -919,6 +955,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
         el('span', { class: 'disc', style: `background:${markColor(o.art)};color:${inkOn(o.art)}`, text: abbr(o.art) }),
         el('span', { class: 'a' }, o.art + (o.antall > 1 ? ` ×${o.antall}` : ''), o.eksempel ? el('span', { class: 'ex', text: 'Eksempel' }) : null),
         el('span', { class: 't', text: fmtTid(o.tid).replace(' kl.', ',') }),
+        el('span', { class: 'age', text: ageText(o) }),
         el('span', { class: 'm', text: meta || '–' }));
       b.addEventListener('click', () => {
         if (window.innerWidth < 800) closePanels();
@@ -1682,6 +1719,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
     if (sim.on) applySim(false);
     renderSteder();
     renderAll();
+    // aldersringene oppdateres hver halvtime
+    setInterval(() => { if (state.mode === 'view' && !document.body.classList.contains('popup-open')) renderMarkers(); }, 30 * 60e3);
     window.addEventListener('online', renderStatus);
     window.addEventListener('offline', renderStatus);
     const canSW = 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')
