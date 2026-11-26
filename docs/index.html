@@ -3,11 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Viltobservasjoner Linge</title>
+<title>Linge viltobs</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#17191B" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Viltobs">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=Saira:wght@400;500;600&family=Saira+Condensed:wght@600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&display=swap">
 <style>
 /* Kartblad: papirhvitt, skarpe linjer og kartrødt, inspirert av norske kartblad.
    Kartet fyller skjermen med trådkors i midten; topplinje, koordinatlinje og verktøylinje er dokket. */
@@ -719,6 +726,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     base[name].on('tileerror', () => {
       const h = health[name];
       h.err++;
+      if (!navigator.onLine) return;   // uten nett: lagrede kartbilder vises, ikke bytt lag
       if (name !== currentBase || h.failed || h.ok > 0 || h.err < 8) return;
       h.failed = true;
       const next = BASE_NAMES.find(n => !health[n].failed);
@@ -920,7 +928,8 @@ input[type=number]{font-variant-numeric:tabular-nums}
     if (nEx) parts.push(el('span', { class: 'pill' }, `${nEx} eksempler vises`, el('button', { type: 'button', text: 'Fjern', onclick: removeExamples })));
     if (filterActive()) parts.push(el('span', { class: 'pill' }, `Filter: ${filtered().length} av ${state.obs.length}`, el('button', { type: 'button', text: 'Nullstill', onclick: resetFilter })));
     if (sim.on) parts.push(el('span', { class: 'pill' }, 'Simulert posisjon: Linge', el('button', { type: 'button', text: 'Slå av', onclick: () => setSim(false) })));
-    if (state.mapFail) parts.push(el('span', { class: 'pill', style: 'white-space:normal' }, 'Ingen kartbilder lastet, verken fra Esri, Kartverket eller OpenStreetMap. Sjekk nettforbindelsen, eller om en annonseblokkering stopper dem.'));
+    if (!navigator.onLine) parts.push(el('span', { class: 'pill', style: 'white-space:normal' }, 'Uten nett. Kartet viser bilder som er lagret på telefonen, og observasjoner lagres som vanlig.'));
+    if (state.mapFail && navigator.onLine) parts.push(el('span', { class: 'pill', style: 'white-space:normal' }, 'Ingen kartbilder lastet, verken fra Esri, Kartverket eller OpenStreetMap. Sjekk nettforbindelsen, eller om en annonseblokkering stopper dem.'));
     box.replaceChildren(...parts);
     $('#t-filter .dot').hidden = !filterActive();
   }
@@ -1268,6 +1277,7 @@ input[type=number]{font-variant-numeric:tabular-nums}
     });
   }
   async function getWeather(lat, lon, tid) {
+    if (!navigator.onLine) return { ok: false, message: 'Uten nett. Værdata kan ikke hentes nå, så fyll inn vær og vind selv.' };
     if (hasServer()) {
       const key = ['srv', lat.toFixed(3), lon.toFixed(3), tid.slice(0, 13)].join('|');
       if (wxCache.has(key)) return wxCache.get(key);
@@ -1663,6 +1673,11 @@ input[type=number]{font-variant-numeric:tabular-nums}
     if (sim.on) applySim(false);
     renderSteder();
     renderAll();
+    window.addEventListener('online', renderStatus);
+    window.addEventListener('offline', renderStatus);
+    const canSW = 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')
+      && !/googleusercontent\.com$|script\.google\.com$/.test(location.hostname);
+    if (canSW) navigator.serviceWorker.register('sw.js').catch(() => { /* appen virker også uten */ });
     if (!storageOk) toast('Nettleseren tillater ikke lagring. Observasjoner forsvinner når siden lukkes.', true);
   })();
 })();

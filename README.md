@@ -26,6 +26,8 @@ Delt kart for å registrere hvor det er observert vilt ved Linge i Valldal (Fjor
 - Statistikk: hjort etter kategori med kalv per kolle og kolle per bukk, observasjoner per måned og per time på døgnet.
 - Merkede eksempelobservasjoner som kan fjernes.
 
+Appen kan installeres (manifest og ikoner i `docs/`). En service worker (`docs/sw.js`) gjør at appen åpner uten nett, og kartbilder du har sett lagres på enheten (inntil 4000 bilder).
+
 Observasjoner lagres bare i nettleseren på enheten. Værdata hentes direkte fra Open-Meteo (MET Nordic), eller via `getWeather` i `Code.gs` når siden kjøres i Apps Script.
 
 ## Filer
